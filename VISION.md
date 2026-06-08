@@ -35,6 +35,11 @@ Contribution rules:
 
 ## Security
 
+Canonical security policy and reporting:
+
+- [`SECURITY.md`](SECURITY.md)
+
+
 This is a static front-end demo. Avoid adding external scripts, trackers, or
 network dependencies unless they are documented and necessary for the demo.
 
