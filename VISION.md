@@ -44,3 +44,6 @@ network dependencies unless they are documented and necessary for the demo.
 - Build pipelines that make the static demo harder to open
 - Third-party scripts without a clear purpose
 - Generated CSS artifacts unless a future workflow explicitly owns them
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
