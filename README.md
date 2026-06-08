@@ -1,5 +1,8 @@
 # bootstrap.less
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/bootstrap.less` is a static web project. Boostrap for Less
@@ -72,4 +75,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > Bootstrap.less <!-- README-OVERVIEW-IMAGE --> Legacy static demo for the original Bootstrap.less mixins and variables. Project Shape This repository has no package manager or build pipeline. The demo page loads: - `index.html` for the documentation/demo page. - `style.less` for page-specific styles. - `bootstrap.less` for the mixins and variables.
-
