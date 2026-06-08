@@ -48,12 +48,17 @@ require_contains "less-1.1.3.min.js" "LESS - Leaner CSS v1.1.3" \
   "LESS runtime provenance header is missing."
 require_contains "README.md" "scripts/check-baseline.sh" \
   "README must document the baseline check."
+require_contains "README.md" "make check" \
+  "README must document the make check wrapper."
 require_contains "README.md" "no package manager and no build pipeline" \
   "README must document the no-build project shape."
 require_contains "README.md" "less-1.1.3.min.js" \
   "README must document the checked-in LESS runtime."
 require_contains "README.md" "CHANGES.md" \
   "README must point to CHANGES.md."
+require_file "Makefile"
+require_contains "Makefile" "scripts/check-baseline.sh" \
+  "Makefile must run the static baseline check."
 
 if grep -Fq "http://" "$INDEX"; then
   printf '%s\n' "index.html must not contain insecure HTTP URLs." >&2

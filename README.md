@@ -48,6 +48,7 @@ Open `index.html` in a browser, or serve this directory with any static file ser
 Run the SDK-free source baseline check:
 
 ```sh
+make check
 scripts/check-baseline.sh
 ```
 

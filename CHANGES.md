@@ -2,6 +2,7 @@
 
 ## 2026-06-08
 
+- Added `make check` as the SDK-free static baseline wrapper.
 - Restored README verification notes for the static no-build baseline after the
   generated project overview refresh.
 - Fixed malformed HTML title markup in the demo page.
