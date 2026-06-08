@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Restored README verification notes for the static no-build baseline after the
+  generated project overview refresh.
 - Fixed malformed HTML title markup in the demo page.
 - Replaced insecure HTTP links and third-party script URLs in `index.html` with
   HTTPS equivalents.
