@@ -1,5 +1,8 @@
 # Bootstrap.less
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 Legacy static demo for the original Bootstrap.less mixins and variables.
 
 ## Project Shape
