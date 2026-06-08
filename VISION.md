@@ -1,5 +1,8 @@
 ## Bootstrap.less Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 Bootstrap.less is a preserved LESS mixin and variable demo inspired by early
 Bootstrap-era front-end tooling.
 
