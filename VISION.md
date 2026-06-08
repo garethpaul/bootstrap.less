@@ -38,7 +38,7 @@ Contribution rules:
 This is a static front-end demo. Avoid adding external scripts, trackers, or
 network dependencies unless they are documented and necessary for the demo.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Modern Bootstrap migrations that discard the LESS sample
 - Build pipelines that make the static demo harder to open
