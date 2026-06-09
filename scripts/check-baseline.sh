@@ -63,6 +63,8 @@ require_contains "README.md" "CHANGES.md" \
   "README must point to CHANGES.md."
 require_contains "README.md" "single async Twitter widgets script load" \
   "README must document the Twitter widgets script baseline."
+require_contains "README.md" "no-referrer policy" \
+  "README must document the Twitter widgets referrer policy."
 require_contains "README.md" "opacity mixin uses its declared parameter" \
   "README must document the opacity mixin fix."
 require_file "Makefile"
@@ -90,11 +92,15 @@ if [ "$TWITTER_WIDGET_COUNT" -ne 1 ]; then
   exit 1
 fi
 
-require_contains "index.html" '<script type="text/javascript" async src="https://platform.twitter.com/widgets.js"></script>' \
-  "Twitter widgets script must load asynchronously."
+require_contains "index.html" '<script type="text/javascript" async referrerpolicy="no-referrer" src="https://platform.twitter.com/widgets.js"></script>' \
+  "Twitter widgets script must load asynchronously without sending a referrer."
 require_contains "docs/plans/2026-06-09-static-opacity-mixin-variable.md" "Status: Completed" \
   "Opacity mixin plan must record completed status."
 require_contains "docs/plans/2026-06-09-static-opacity-mixin-variable.md" "make check" \
   "Opacity mixin plan must record make check verification."
+require_contains "docs/plans/2026-06-09-static-twitter-widget-referrer-policy.md" "Status: Completed" \
+  "Twitter widget referrer policy plan must record completed status."
+require_contains "docs/plans/2026-06-09-static-twitter-widget-referrer-policy.md" "make check" \
+  "Twitter widget referrer policy plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

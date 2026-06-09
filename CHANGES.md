@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added a `no-referrer` policy to the single async Twitter widgets script load
+  and guarded it in the static baseline.
 - Fixed the `.opacity(@opacity)` mixin to use its declared `@opacity` parameter
   instead of the undefined `@op` variable.
 - Extended the static baseline and README notes to guard the opacity mixin

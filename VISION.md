@@ -20,6 +20,7 @@ Priority:
 - Preserve the LESS mixins, variables, and demo page
 - Keep the project usable as a static local example
 - Keep mixin parameters and generated CSS examples internally consistent
+- Keep the only external script load constrained and documented
 - Make historical dependencies explicit
 - Avoid modern CSS rewrites that erase the original learning value
 
