@@ -6,6 +6,7 @@ INDEX="$ROOT_DIR/index.html"
 MAKE_GATE_PLAN="docs/plans/2026-06-09-static-make-gate-targets.md"
 MAILTO_ENCODING_PLAN="docs/plans/2026-06-09-static-mailto-query-encoding.md"
 BUTTON_SAMPLE_PLAN="docs/plans/2026-06-09-static-button-sample-radius-parameter.md"
+DOCUMENT_REFERRER_PLAN="docs/plans/2026-06-09-static-document-referrer-policy.md"
 
 require_file() {
   path=$1
@@ -35,6 +36,7 @@ for path in \
   "$MAKE_GATE_PLAN" \
   "$MAILTO_ENCODING_PLAN" \
   "$BUTTON_SAMPLE_PLAN" \
+  "$DOCUMENT_REFERRER_PLAN" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -48,6 +50,8 @@ require_contains "index.html" 'href="style.less"' \
   "index.html must load the demo LESS file."
 require_contains "index.html" 'src="less-1.1.3.min.js"' \
   "index.html must load the checked-in LESS runtime."
+require_contains "index.html" '<meta name="referrer" content="no-referrer">' \
+  "index.html must set a document-wide no-referrer policy."
 require_contains "index.html" "less.watch();" \
   "index.html must preserve the browser LESS watch behavior."
 require_contains "index.html" 'href="mailto:hi@markdotto.com?subject=About%20Bootstrap"' \
@@ -86,6 +90,8 @@ require_contains "README.md" "no-referrer policy" \
   "README must document the Twitter widgets referrer policy."
 require_contains "README.md" "Twitter share links also use a no-referrer policy" \
   "README must document the Twitter share link referrer policy."
+require_contains "README.md" "document-wide no-referrer policy" \
+  "README must document the document-wide referrer policy."
 require_contains "README.md" "opacity mixin uses its declared parameter" \
   "README must document the opacity mixin fix."
 require_contains "README.md" "button snippet uses its declared border radius parameter" \
@@ -164,5 +170,9 @@ require_contains "$BUTTON_SAMPLE_PLAN" "Status: Completed" \
   "Button sample radius parameter plan must record completed status."
 require_contains "$BUTTON_SAMPLE_PLAN" "make check" \
   "Button sample radius parameter plan must record make check verification."
+require_contains "$DOCUMENT_REFERRER_PLAN" "Status: Completed" \
+  "Document referrer policy plan must record completed status."
+require_contains "$DOCUMENT_REFERRER_PLAN" "make check" \
+  "Document referrer policy plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

@@ -55,7 +55,7 @@ make check
 scripts/check-baseline.sh
 ```
 
-This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, and the single async Twitter widgets script load with a no-referrer policy.
+This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, and the single async Twitter widgets script load with a no-referrer policy.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -76,6 +76,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The opacity mixin uses its declared parameter for all generated opacity rules.
 - The Twitter widgets script is loaded once, asynchronously, with a
   `no-referrer` policy.
+- The page sets a document-wide no-referrer policy before loading styles,
+  scripts, or outbound links.
 - Twitter share links also use a no-referrer policy before handing off to the
   external share endpoint.
 - Mailto query strings stay URL-encoded so static links remain valid.
@@ -90,6 +92,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   link encoding guard.
 - See `docs/plans/2026-06-09-static-button-sample-radius-parameter.md` for the
   button snippet radius parameter guard.
+- See `docs/plans/2026-06-09-static-document-referrer-policy.md` for the
+  page-level referrer policy guard.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

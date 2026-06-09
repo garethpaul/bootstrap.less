@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added a document-wide `no-referrer` policy so every static page request and
+  outbound handoff follows the privacy baseline.
 - Aligned the visible button snippet with the checked-in `.button()` border
   radius parameter and helper call.
 - URL-encoded the footer mailto query string and added a static baseline guard
