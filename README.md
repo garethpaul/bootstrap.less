@@ -78,11 +78,14 @@ When the required SDK or runtime is unavailable, use static checks and source re
   `no-referrer` policy.
 - Twitter share links also use a no-referrer policy before handing off to the
   external share endpoint.
+- Mailto query strings stay URL-encoded so static links remain valid.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the static
   source baseline available without introducing a package manager.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `docs/plans/2026-06-09-static-make-gate-targets.md` for the root gate
   target baseline.
+- See `docs/plans/2026-06-09-static-mailto-query-encoding.md` for the mailto
+  link encoding guard.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

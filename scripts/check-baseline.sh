@@ -4,6 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 INDEX="$ROOT_DIR/index.html"
 MAKE_GATE_PLAN="docs/plans/2026-06-09-static-make-gate-targets.md"
+MAILTO_ENCODING_PLAN="docs/plans/2026-06-09-static-mailto-query-encoding.md"
 
 require_file() {
   path=$1
@@ -31,6 +32,7 @@ for path in \
   "docs/plans/2026-06-09-static-opacity-mixin-variable.md" \
   "docs/plans/2026-06-09-static-twitter-share-link-referrer-policy.md" \
   "$MAKE_GATE_PLAN" \
+  "$MAILTO_ENCODING_PLAN" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -46,6 +48,8 @@ require_contains "index.html" 'src="less-1.1.3.min.js"' \
   "index.html must load the checked-in LESS runtime."
 require_contains "index.html" "less.watch();" \
   "index.html must preserve the browser LESS watch behavior."
+require_contains "index.html" 'href="mailto:hi@markdotto.com?subject=About%20Bootstrap"' \
+  "Mailto query strings must be URL-encoded."
 require_contains "style.less" '@import "bootstrap.less";' \
   "style.less must import bootstrap.less."
 require_contains "bootstrap.less" ".opacity(@opacity: 100)" \
@@ -95,6 +99,11 @@ if grep -Fq "http://" "$INDEX"; then
   exit 1
 fi
 
+if grep -Eq 'href="[^"]*[[:space:]][^"]*"' "$INDEX"; then
+  printf '%s\n' "href attributes must not contain raw whitespace; URL-encode query strings." >&2
+  exit 1
+fi
+
 if grep -Eq '@op([^[:alnum:]_-]|$)' "$ROOT_DIR/bootstrap.less"; then
   printf '%s\n' "bootstrap.less must not reference the undefined @op variable." >&2
   exit 1
@@ -134,5 +143,9 @@ require_contains "$MAKE_GATE_PLAN" "Status: Completed" \
   "Static make gate plan must record completed status."
 require_contains "$MAKE_GATE_PLAN" "make check" \
   "Static make gate plan must record make check verification."
+require_contains "$MAILTO_ENCODING_PLAN" "Status: Completed" \
+  "Mailto query encoding plan must record completed status."
+require_contains "$MAILTO_ENCODING_PLAN" "make check" \
+  "Mailto query encoding plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

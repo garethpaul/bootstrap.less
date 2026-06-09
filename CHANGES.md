@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- URL-encoded the footer mailto query string and added a static baseline guard
+  against raw whitespace inside `href` attributes.
 - Added root `make lint`, `make test`, `make build`, and `make check` gates
   around the static source baseline without adding a package manager.
 - Added a `no-referrer` policy to the Twitter share links so clicked share

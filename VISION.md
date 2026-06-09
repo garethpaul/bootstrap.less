@@ -22,6 +22,7 @@ Priority:
 - Keep mixin parameters and generated CSS examples internally consistent
 - Keep the only external script load constrained and documented
 - Keep external share-link referrer behavior constrained and documented
+- Keep static link attributes valid without relying on browser repair
 - Keep root lint, test, and build gates tied to the static source baseline
 - Make historical dependencies explicit
 - Avoid modern CSS rewrites that erase the original learning value
