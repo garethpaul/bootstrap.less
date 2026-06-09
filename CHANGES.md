@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added a `no-referrer` policy to the Twitter share links so clicked share
+  actions match the existing widgets script referrer baseline.
 - Added a `no-referrer` policy to the single async Twitter widgets script load
   and guarded it in the static baseline.
 - Fixed the `.opacity(@opacity)` mixin to use its declared `@opacity` parameter

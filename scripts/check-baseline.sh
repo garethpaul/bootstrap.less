@@ -28,6 +28,7 @@ for path in \
   "CHANGES.md" \
   "docs/plans/2026-06-08-static-less-demo-baseline.md" \
   "docs/plans/2026-06-09-static-opacity-mixin-variable.md" \
+  "docs/plans/2026-06-09-static-twitter-share-link-referrer-policy.md" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -65,6 +66,8 @@ require_contains "README.md" "single async Twitter widgets script load" \
   "README must document the Twitter widgets script baseline."
 require_contains "README.md" "no-referrer policy" \
   "README must document the Twitter widgets referrer policy."
+require_contains "README.md" "Twitter share links also use a no-referrer policy" \
+  "README must document the Twitter share link referrer policy."
 require_contains "README.md" "opacity mixin uses its declared parameter" \
   "README must document the opacity mixin fix."
 require_file "Makefile"
@@ -92,6 +95,11 @@ if [ "$TWITTER_WIDGET_COUNT" -ne 1 ]; then
   exit 1
 fi
 
+if grep -F 'href="https://twitter.com/share"' "$INDEX" | grep -Fvq 'referrerpolicy="no-referrer"'; then
+  printf '%s\n' "Twitter share links must not send a referrer." >&2
+  exit 1
+fi
+
 require_contains "index.html" '<script type="text/javascript" async referrerpolicy="no-referrer" src="https://platform.twitter.com/widgets.js"></script>' \
   "Twitter widgets script must load asynchronously without sending a referrer."
 require_contains "docs/plans/2026-06-09-static-opacity-mixin-variable.md" "Status: Completed" \
@@ -102,5 +110,9 @@ require_contains "docs/plans/2026-06-09-static-twitter-widget-referrer-policy.md
   "Twitter widget referrer policy plan must record completed status."
 require_contains "docs/plans/2026-06-09-static-twitter-widget-referrer-policy.md" "make check" \
   "Twitter widget referrer policy plan must record make check verification."
+require_contains "docs/plans/2026-06-09-static-twitter-share-link-referrer-policy.md" "Status: Completed" \
+  "Twitter share link referrer policy plan must record completed status."
+require_contains "docs/plans/2026-06-09-static-twitter-share-link-referrer-policy.md" "make check" \
+  "Twitter share link referrer policy plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

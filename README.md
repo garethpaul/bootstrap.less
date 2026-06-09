@@ -73,6 +73,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The opacity mixin uses its declared parameter for all generated opacity rules.
 - The Twitter widgets script is loaded once, asynchronously, with a
   `no-referrer` policy.
+- Twitter share links also use a no-referrer policy before handing off to the
+  external share endpoint.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
