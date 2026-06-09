@@ -5,6 +5,7 @@ ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 INDEX="$ROOT_DIR/index.html"
 MAKE_GATE_PLAN="docs/plans/2026-06-09-static-make-gate-targets.md"
 MAILTO_ENCODING_PLAN="docs/plans/2026-06-09-static-mailto-query-encoding.md"
+BUTTON_SAMPLE_PLAN="docs/plans/2026-06-09-static-button-sample-radius-parameter.md"
 
 require_file() {
   path=$1
@@ -33,6 +34,7 @@ for path in \
   "docs/plans/2026-06-09-static-twitter-share-link-referrer-policy.md" \
   "$MAKE_GATE_PLAN" \
   "$MAILTO_ENCODING_PLAN" \
+  "$BUTTON_SAMPLE_PLAN" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -56,6 +58,10 @@ require_contains "bootstrap.less" ".opacity(@opacity: 100)" \
   "bootstrap.less must preserve the opacity mixin signature."
 require_contains "bootstrap.less" "opacity: @opacity / 100;" \
   "Opacity mixin must use its declared parameter for standard opacity."
+require_contains "index.html" "@borderRadius: 6px" \
+  "Button demo snippet must document the checked-in border radius parameter."
+require_contains "index.html" ".border-radius(@borderRadius);" \
+  "Button demo snippet must pass its border radius parameter to the helper."
 require_contains "less-1.1.3.min.js" "LESS - Leaner CSS v1.1.3" \
   "LESS runtime provenance header is missing."
 require_contains "README.md" "scripts/check-baseline.sh" \
@@ -82,6 +88,8 @@ require_contains "README.md" "Twitter share links also use a no-referrer policy"
   "README must document the Twitter share link referrer policy."
 require_contains "README.md" "opacity mixin uses its declared parameter" \
   "README must document the opacity mixin fix."
+require_contains "README.md" "button snippet uses its declared border radius parameter" \
+  "README must document the button demo snippet guard."
 require_file "Makefile"
 require_contains "Makefile" "scripts/check-baseline.sh" \
   "Makefile must run the static baseline check."
@@ -106,6 +114,11 @@ fi
 
 if grep -Eq '@op([^[:alnum:]_-]|$)' "$ROOT_DIR/bootstrap.less"; then
   printf '%s\n' "bootstrap.less must not reference the undefined @op variable." >&2
+  exit 1
+fi
+
+if grep -Fq ".rounded(6px);" "$INDEX" || grep -Fq "@rounded: 6px" "$INDEX"; then
+  printf '%s\n' "Button demo snippet must not document the obsolete rounded parameter or helper." >&2
   exit 1
 fi
 
@@ -147,5 +160,9 @@ require_contains "$MAILTO_ENCODING_PLAN" "Status: Completed" \
   "Mailto query encoding plan must record completed status."
 require_contains "$MAILTO_ENCODING_PLAN" "make check" \
   "Mailto query encoding plan must record make check verification."
+require_contains "$BUTTON_SAMPLE_PLAN" "Status: Completed" \
+  "Button sample radius parameter plan must record completed status."
+require_contains "$BUTTON_SAMPLE_PLAN" "make check" \
+  "Button sample radius parameter plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

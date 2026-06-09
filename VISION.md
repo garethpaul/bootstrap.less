@@ -20,6 +20,7 @@ Priority:
 - Preserve the LESS mixins, variables, and demo page
 - Keep the project usable as a static local example
 - Keep mixin parameters and generated CSS examples internally consistent
+- Keep visible demo snippets aligned with checked-in mixin signatures
 - Keep the only external script load constrained and documented
 - Keep external share-link referrer behavior constrained and documented
 - Keep static link attributes valid without relying on browser repair

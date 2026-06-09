@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Aligned the visible button snippet with the checked-in `.button()` border
+  radius parameter and helper call.
 - URL-encoded the footer mailto query string and added a static baseline guard
   against raw whitespace inside `href` attributes.
 - Added root `make lint`, `make test`, `make build`, and `make check` gates

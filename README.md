@@ -79,6 +79,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Twitter share links also use a no-referrer policy before handing off to the
   external share endpoint.
 - Mailto query strings stay URL-encoded so static links remain valid.
+- The visible button snippet uses its declared border radius parameter, matching
+  the checked-in `.button()` mixin.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the static
   source baseline available without introducing a package manager.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
@@ -86,6 +88,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   target baseline.
 - See `docs/plans/2026-06-09-static-mailto-query-encoding.md` for the mailto
   link encoding guard.
+- See `docs/plans/2026-06-09-static-button-sample-radius-parameter.md` for the
+  button snippet radius parameter guard.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 
