@@ -78,6 +78,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   `no-referrer` policy.
 - The page sets a document-wide no-referrer policy before loading styles,
   scripts, or outbound links.
+- The page includes a mobile viewport meta tag so static local viewing starts
+  from the device width instead of a desktop layout default.
 - Twitter share links also use a no-referrer policy before handing off to the
   external share endpoint.
 - Mailto query strings stay URL-encoded so static links remain valid.
@@ -94,6 +96,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   button snippet radius parameter guard.
 - See `docs/plans/2026-06-09-static-document-referrer-policy.md` for the
   page-level referrer policy guard.
+- See `docs/plans/2026-06-09-static-viewport-meta-baseline.md` for the mobile
+  viewport meta baseline.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

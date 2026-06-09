@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added a mobile viewport meta tag to keep the static demo sized to the device
+  width when opened directly.
 - Added a document-wide `no-referrer` policy so every static page request and
   outbound handoff follows the privacy baseline.
 - Aligned the visible button snippet with the checked-in `.button()` border

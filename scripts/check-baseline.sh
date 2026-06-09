@@ -7,6 +7,7 @@ MAKE_GATE_PLAN="docs/plans/2026-06-09-static-make-gate-targets.md"
 MAILTO_ENCODING_PLAN="docs/plans/2026-06-09-static-mailto-query-encoding.md"
 BUTTON_SAMPLE_PLAN="docs/plans/2026-06-09-static-button-sample-radius-parameter.md"
 DOCUMENT_REFERRER_PLAN="docs/plans/2026-06-09-static-document-referrer-policy.md"
+VIEWPORT_PLAN="docs/plans/2026-06-09-static-viewport-meta-baseline.md"
 
 require_file() {
   path=$1
@@ -37,6 +38,7 @@ for path in \
   "$MAILTO_ENCODING_PLAN" \
   "$BUTTON_SAMPLE_PLAN" \
   "$DOCUMENT_REFERRER_PLAN" \
+  "$VIEWPORT_PLAN" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -46,6 +48,8 @@ done
 
 require_contains "index.html" "<title>Bootstrap.less</title>" \
   "index.html must contain a valid title tag."
+require_contains "index.html" '<meta name="viewport" content="width=device-width, initial-scale=1">' \
+  "index.html must include a mobile viewport baseline."
 require_contains "index.html" 'href="style.less"' \
   "index.html must load the demo LESS file."
 require_contains "index.html" 'src="less-1.1.3.min.js"' \
@@ -92,6 +96,8 @@ require_contains "README.md" "Twitter share links also use a no-referrer policy"
   "README must document the Twitter share link referrer policy."
 require_contains "README.md" "document-wide no-referrer policy" \
   "README must document the document-wide referrer policy."
+require_contains "README.md" "mobile viewport meta tag" \
+  "README must document the viewport meta baseline."
 require_contains "README.md" "opacity mixin uses its declared parameter" \
   "README must document the opacity mixin fix."
 require_contains "README.md" "button snippet uses its declared border radius parameter" \
@@ -174,5 +180,9 @@ require_contains "$DOCUMENT_REFERRER_PLAN" "Status: Completed" \
   "Document referrer policy plan must record completed status."
 require_contains "$DOCUMENT_REFERRER_PLAN" "make check" \
   "Document referrer policy plan must record make check verification."
+require_contains "$VIEWPORT_PLAN" "Status: Completed" \
+  "Static viewport meta plan must record completed status."
+require_contains "$VIEWPORT_PLAN" "make check" \
+  "Static viewport meta plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."
