@@ -56,6 +56,8 @@ require_contains "README.md" "less-1.1.3.min.js" \
   "README must document the checked-in LESS runtime."
 require_contains "README.md" "CHANGES.md" \
   "README must point to CHANGES.md."
+require_contains "README.md" "single async Twitter widgets script load" \
+  "README must document the Twitter widgets script baseline."
 require_file "Makefile"
 require_contains "Makefile" "scripts/check-baseline.sh" \
   "Makefile must run the static baseline check."
@@ -69,5 +71,14 @@ if grep -F 'target="_blank"' "$INDEX" | grep -Fvq 'rel="noopener noreferrer"'; t
   printf '%s\n' "New-tab links must include rel=\"noopener noreferrer\"." >&2
   exit 1
 fi
+
+TWITTER_WIDGET_COUNT=$(grep -Foc 'src="https://platform.twitter.com/widgets.js"' "$INDEX")
+if [ "$TWITTER_WIDGET_COUNT" -ne 1 ]; then
+  printf '%s\n' "index.html must load the Twitter widgets script exactly once." >&2
+  exit 1
+fi
+
+require_contains "index.html" '<script type="text/javascript" async src="https://platform.twitter.com/widgets.js"></script>' \
+  "Twitter widgets script must load asynchronously."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

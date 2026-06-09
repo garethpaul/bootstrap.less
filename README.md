@@ -52,7 +52,7 @@ make check
 scripts/check-baseline.sh
 ```
 
-This repository has no package manager and no build pipeline. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, and safe `target="_blank"` links.
+This repository has no package manager and no build pipeline. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, and the single async Twitter widgets script load.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
