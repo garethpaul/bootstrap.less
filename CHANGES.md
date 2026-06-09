@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-09
+
+- Fixed the `.opacity(@opacity)` mixin to use its declared `@opacity` parameter
+  instead of the undefined `@op` variable.
+- Extended the static baseline and README notes to guard the opacity mixin
+  contract without adding a build pipeline.
+
 ## 2026-06-08
 
 - Loaded the Twitter widgets script once with `async` instead of duplicating it

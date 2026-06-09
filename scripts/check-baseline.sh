@@ -27,6 +27,7 @@ for path in \
   "README.md" \
   "CHANGES.md" \
   "docs/plans/2026-06-08-static-less-demo-baseline.md" \
+  "docs/plans/2026-06-09-static-opacity-mixin-variable.md" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -44,6 +45,10 @@ require_contains "index.html" "less.watch();" \
   "index.html must preserve the browser LESS watch behavior."
 require_contains "style.less" '@import "bootstrap.less";' \
   "style.less must import bootstrap.less."
+require_contains "bootstrap.less" ".opacity(@opacity: 100)" \
+  "bootstrap.less must preserve the opacity mixin signature."
+require_contains "bootstrap.less" "opacity: @opacity / 100;" \
+  "Opacity mixin must use its declared parameter for standard opacity."
 require_contains "less-1.1.3.min.js" "LESS - Leaner CSS v1.1.3" \
   "LESS runtime provenance header is missing."
 require_contains "README.md" "scripts/check-baseline.sh" \
@@ -58,12 +63,19 @@ require_contains "README.md" "CHANGES.md" \
   "README must point to CHANGES.md."
 require_contains "README.md" "single async Twitter widgets script load" \
   "README must document the Twitter widgets script baseline."
+require_contains "README.md" "opacity mixin uses its declared parameter" \
+  "README must document the opacity mixin fix."
 require_file "Makefile"
 require_contains "Makefile" "scripts/check-baseline.sh" \
   "Makefile must run the static baseline check."
 
 if grep -Fq "http://" "$INDEX"; then
   printf '%s\n' "index.html must not contain insecure HTTP URLs." >&2
+  exit 1
+fi
+
+if grep -Eq '@op([^[:alnum:]_-]|$)' "$ROOT_DIR/bootstrap.less"; then
+  printf '%s\n' "bootstrap.less must not reference the undefined @op variable." >&2
   exit 1
 fi
 
@@ -80,5 +92,9 @@ fi
 
 require_contains "index.html" '<script type="text/javascript" async src="https://platform.twitter.com/widgets.js"></script>' \
   "Twitter widgets script must load asynchronously."
+require_contains "docs/plans/2026-06-09-static-opacity-mixin-variable.md" "Status: Completed" \
+  "Opacity mixin plan must record completed status."
+require_contains "docs/plans/2026-06-09-static-opacity-mixin-variable.md" "make check" \
+  "Opacity mixin plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."
