@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Added root `make lint`, `make test`, `make build`, and `make check` gates
+  around the static source baseline without adding a package manager.
 - Added a `no-referrer` policy to the Twitter share links so clicked share
   actions match the existing widgets script referrer baseline.
 - Added a `no-referrer` policy to the single async Twitter widgets script load

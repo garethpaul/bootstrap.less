@@ -3,6 +3,7 @@ set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 INDEX="$ROOT_DIR/index.html"
+MAKE_GATE_PLAN="docs/plans/2026-06-09-static-make-gate-targets.md"
 
 require_file() {
   path=$1
@@ -29,6 +30,7 @@ for path in \
   "docs/plans/2026-06-08-static-less-demo-baseline.md" \
   "docs/plans/2026-06-09-static-opacity-mixin-variable.md" \
   "docs/plans/2026-06-09-static-twitter-share-link-referrer-policy.md" \
+  "$MAKE_GATE_PLAN" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -56,6 +58,12 @@ require_contains "README.md" "scripts/check-baseline.sh" \
   "README must document the baseline check."
 require_contains "README.md" "make check" \
   "README must document the make check wrapper."
+require_contains "README.md" "make lint" \
+  "README must document the lint gate."
+require_contains "README.md" "make test" \
+  "README must document the test gate."
+require_contains "README.md" "make build" \
+  "README must document the build gate."
 require_contains "README.md" "no package manager and no build pipeline" \
   "README must document the no-build project shape."
 require_contains "README.md" "less-1.1.3.min.js" \
@@ -73,6 +81,14 @@ require_contains "README.md" "opacity mixin uses its declared parameter" \
 require_file "Makefile"
 require_contains "Makefile" "scripts/check-baseline.sh" \
   "Makefile must run the static baseline check."
+require_contains "Makefile" "lint:" \
+  "Makefile must expose a lint gate."
+require_contains "Makefile" "test:" \
+  "Makefile must expose a test gate."
+require_contains "Makefile" "build:" \
+  "Makefile must expose a build gate."
+require_contains "Makefile" "verify: lint test build" \
+  "Makefile must expose a combined verify gate."
 
 if grep -Fq "http://" "$INDEX"; then
   printf '%s\n' "index.html must not contain insecure HTTP URLs." >&2
@@ -114,5 +130,9 @@ require_contains "docs/plans/2026-06-09-static-twitter-share-link-referrer-polic
   "Twitter share link referrer policy plan must record completed status."
 require_contains "docs/plans/2026-06-09-static-twitter-share-link-referrer-policy.md" "make check" \
   "Twitter share link referrer policy plan must record make check verification."
+require_contains "$MAKE_GATE_PLAN" "Status: Completed" \
+  "Static make gate plan must record completed status."
+require_contains "$MAKE_GATE_PLAN" "make check" \
+  "Static make gate plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

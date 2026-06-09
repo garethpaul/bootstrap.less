@@ -45,14 +45,17 @@ Open `index.html` in a browser, or serve this directory with any static file ser
 
 ## Testing and Verification
 
-Run the SDK-free source baseline check:
+Run the SDK-free source baseline and root wrapper gates:
 
 ```sh
+make lint
+make test
+make build
 make check
 scripts/check-baseline.sh
 ```
 
-This repository has no package manager and no build pipeline. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, and the single async Twitter widgets script load with a no-referrer policy.
+This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, and the single async Twitter widgets script load with a no-referrer policy.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -75,7 +78,11 @@ When the required SDK or runtime is unavailable, use static checks and source re
   `no-referrer` policy.
 - Twitter share links also use a no-referrer policy before handing off to the
   external share endpoint.
+- Root `make lint`, `make test`, `make build`, and `make check` keep the static
+  source baseline available without introducing a package manager.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
+- See `docs/plans/2026-06-09-static-make-gate-targets.md` for the root gate
+  target baseline.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 
