@@ -1,5 +1,14 @@
 # Changes
 
+## 2026-06-10
+
+- Added a GitHub Actions check workflow that runs the existing static
+  `make check` baseline on pushes, pull requests, and manual dispatches.
+- Pinned the checkout action and limited the workflow token to read-only
+  repository access with bounded execution.
+- Added a static guard requiring the CI workflow and completed CI baseline plan
+  to remain checked in without adding a package manager.
+
 ## 2026-06-09
 
 - Added a mobile viewport meta tag to keep the static demo sized to the device

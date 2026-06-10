@@ -55,6 +55,11 @@ make check
 scripts/check-baseline.sh
 ```
 
+GitHub Actions runs `make check` through `.github/workflows/check.yml` on
+pushes, pull requests, and manual dispatches. The workflow uses a
+commit-pinned checkout action, read-only repository access, and a bounded
+runtime.
+
 This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, and the single async Twitter widgets script load with a no-referrer policy.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -98,6 +103,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
   page-level referrer policy guard.
 - See `docs/plans/2026-06-09-static-viewport-meta-baseline.md` for the mobile
   viewport meta baseline.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

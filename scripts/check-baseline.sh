@@ -8,6 +8,7 @@ MAILTO_ENCODING_PLAN="docs/plans/2026-06-09-static-mailto-query-encoding.md"
 BUTTON_SAMPLE_PLAN="docs/plans/2026-06-09-static-button-sample-radius-parameter.md"
 DOCUMENT_REFERRER_PLAN="docs/plans/2026-06-09-static-document-referrer-policy.md"
 VIEWPORT_PLAN="docs/plans/2026-06-09-static-viewport-meta-baseline.md"
+CI_PLAN="docs/plans/2026-06-10-ci-baseline.md"
 
 require_file() {
   path=$1
@@ -39,6 +40,8 @@ for path in \
   "$BUTTON_SAMPLE_PLAN" \
   "$DOCUMENT_REFERRER_PLAN" \
   "$VIEWPORT_PLAN" \
+  "$CI_PLAN" \
+  ".github/workflows/check.yml" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -82,6 +85,8 @@ require_contains "README.md" "make test" \
   "README must document the test gate."
 require_contains "README.md" "make build" \
   "README must document the build gate."
+require_contains "README.md" "GitHub Actions" \
+  "README must document the GitHub Actions baseline."
 require_contains "README.md" "no package manager and no build pipeline" \
   "README must document the no-build project shape."
 require_contains "README.md" "less-1.1.3.min.js" \
@@ -113,6 +118,18 @@ require_contains "Makefile" "build:" \
   "Makefile must expose a build gate."
 require_contains "Makefile" "verify: lint test build" \
   "Makefile must expose a combined verify gate."
+require_contains ".github/workflows/check.yml" "uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" \
+  "GitHub Actions check workflow must pin the reviewed checkout commit."
+require_contains ".github/workflows/check.yml" "permissions:" \
+  "GitHub Actions check workflow must declare token permissions."
+require_contains ".github/workflows/check.yml" "contents: read" \
+  "GitHub Actions check workflow must keep repository access read-only."
+require_contains ".github/workflows/check.yml" "workflow_dispatch:" \
+  "GitHub Actions check workflow must support manual verification."
+require_contains ".github/workflows/check.yml" "timeout-minutes: 5" \
+  "GitHub Actions check workflow must bound baseline execution."
+require_contains ".github/workflows/check.yml" "run: make check" \
+  "GitHub Actions check workflow must run the static make check baseline."
 
 if grep -Fq "http://" "$INDEX"; then
   printf '%s\n' "index.html must not contain insecure HTTP URLs." >&2
@@ -184,5 +201,9 @@ require_contains "$VIEWPORT_PLAN" "Status: Completed" \
   "Static viewport meta plan must record completed status."
 require_contains "$VIEWPORT_PLAN" "make check" \
   "Static viewport meta plan must record make check verification."
+require_contains "$CI_PLAN" "Status: Completed" \
+  "Static CI baseline plan must record completed status."
+require_contains "$CI_PLAN" "make check" \
+  "Static CI baseline plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

@@ -27,6 +27,7 @@ Priority:
 - Keep external share-link referrer behavior constrained and documented
 - Keep static link attributes valid without relying on browser repair
 - Keep root lint, test, and build gates tied to the static source baseline
+- Keep GitHub Actions running the static `make check` baseline before review
 - Make historical dependencies explicit
 - Avoid modern CSS rewrites that erase the original learning value
 
@@ -41,6 +42,8 @@ Contribution rules:
 
 - One PR = one focused documentation, demo, or LESS change.
 - Keep the static demo runnable without a build pipeline.
+- Keep `.github/workflows/check.yml` aligned with the package-manager-free
+  static baseline.
 - Do not replace the project with modern Bootstrap assets.
 - Preserve attribution comments and historical context.
 
