@@ -21,10 +21,12 @@ Priority:
 - Keep the project usable as a static local example
 - Keep mixin parameters and generated CSS examples internally consistent
 - Keep visible demo snippets aligned with checked-in mixin signatures
-- Keep the only external script load constrained and documented
+- Avoid automatic third-party script requests from the static page
 - Keep document-wide referrer behavior constrained and documented
 - Keep local static viewing usable on mobile-width browsers
+- Keep the historical grid readable without horizontal page overflow
 - Keep external share-link referrer behavior constrained and documented
+- Keep external sharing explicit and user-triggered through ordinary links
 - Keep static link attributes valid without relying on browser repair
 - Keep root lint, test, and build gates tied to the static source baseline
 - Keep GitHub Actions running the static `make check` baseline before review

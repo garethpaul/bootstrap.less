@@ -60,7 +60,7 @@ pushes, pull requests, and manual dispatches. The workflow uses a
 commit-pinned checkout action, read-only repository access, and a bounded
 runtime.
 
-This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, and the single async Twitter widgets script load with a no-referrer policy.
+This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, and user-triggered Twitter sharing with no automatic third-party script requests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -79,19 +79,23 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Maintenance Notes
 
 - The opacity mixin uses its declared parameter for all generated opacity rules.
-- The Twitter widgets script is loaded once, asynchronously, with a
-  `no-referrer` policy.
+- Twitter sharing uses self-contained Web Intent links, so loading the page does
+  not contact the Twitter widgets runtime.
 - The page sets a document-wide no-referrer policy before loading styles,
   scripts, or outbound links.
 - The page includes a mobile viewport meta tag so static local viewing starts
   from the device width instead of a desktop layout default.
-- Twitter share links also use a no-referrer policy before handing off to the
+- Twitter share links also use a no-referrer policy, isolated new tabs, encoded
+  query parameters, and descriptive link text before handing off to the
   external share endpoint.
+- The page bounds its historical 640px layout and stacks the overview grid on
+  narrow screens so headings, links, and columns remain visible.
 - Mailto query strings stay URL-encoded so static links remain valid.
 - The visible button snippet uses its declared border radius parameter, matching
   the checked-in `.button()` mixin.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the static
-  source baseline available without introducing a package manager.
+  source baseline available without introducing a package manager, including
+  when invoked outside the repository root with `make -f`.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `docs/plans/2026-06-09-static-make-gate-targets.md` for the root gate
   target baseline.
@@ -104,6 +108,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-09-static-viewport-meta-baseline.md` for the mobile
   viewport meta baseline.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
+- See `docs/plans/2026-06-10-static-twitter-intent-links.md` for the
+  user-triggered share-link and third-party script removal.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

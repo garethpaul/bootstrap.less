@@ -2,6 +2,13 @@
 
 ## 2026-06-10
 
+- Replaced the page-load Twitter widgets runtime with two encoded, descriptive
+  Web Intent links so sharing remains user-triggered without an automatic
+  third-party script request.
+- Bounded the historical fixed-width layout and stacked its overview columns on
+  narrow screens after browser verification exposed mobile clipping.
+- Made root Makefile checks location-independent and pinned CI to the stable
+  Ubuntu 24.04 runner image.
 - Added a GitHub Actions check workflow that runs the existing static
   `make check` baseline on pushes, pull requests, and manual dispatches.
 - Pinned the checkout action and limited the workflow token to read-only

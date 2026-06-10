@@ -9,6 +9,7 @@ BUTTON_SAMPLE_PLAN="docs/plans/2026-06-09-static-button-sample-radius-parameter.
 DOCUMENT_REFERRER_PLAN="docs/plans/2026-06-09-static-document-referrer-policy.md"
 VIEWPORT_PLAN="docs/plans/2026-06-09-static-viewport-meta-baseline.md"
 CI_PLAN="docs/plans/2026-06-10-ci-baseline.md"
+TWITTER_INTENT_PLAN="docs/plans/2026-06-10-static-twitter-intent-links.md"
 
 require_file() {
   path=$1
@@ -41,6 +42,7 @@ for path in \
   "$DOCUMENT_REFERRER_PLAN" \
   "$VIEWPORT_PLAN" \
   "$CI_PLAN" \
+  "$TWITTER_INTENT_PLAN" \
   ".github/workflows/check.yml" \
   "index.html" \
   "style.less" \
@@ -65,6 +67,19 @@ require_contains "index.html" 'href="mailto:hi@markdotto.com?subject=About%20Boo
   "Mailto query strings must be URL-encoded."
 require_contains "style.less" '@import "bootstrap.less";' \
   "style.less must import bootstrap.less."
+require_contains "style.less" "max-width: 640px;" \
+  "Static page sections must remain bounded without forcing mobile overflow."
+require_contains "style.less" "@media (max-width: 700px)" \
+  "Static page must preserve its narrow-screen layout overrides."
+require_contains "style.less" "div.span5" \
+  "Static page must stack the two-column overview on narrow screens."
+require_contains "style.less" "float: none;" \
+  "Static page must release fixed floats on narrow screens."
+
+if [ "$(grep -Foc "float: none;" "$ROOT_DIR/style.less")" -ne 2 ]; then
+  printf '%s\n' "Static page must release both the share control and overview columns on narrow screens." >&2
+  exit 1
+fi
 require_contains "bootstrap.less" ".opacity(@opacity: 100)" \
   "bootstrap.less must preserve the opacity mixin signature."
 require_contains "bootstrap.less" "opacity: @opacity / 100;" \
@@ -93,10 +108,12 @@ require_contains "README.md" "less-1.1.3.min.js" \
   "README must document the checked-in LESS runtime."
 require_contains "README.md" "CHANGES.md" \
   "README must point to CHANGES.md."
-require_contains "README.md" "single async Twitter widgets script load" \
-  "README must document the Twitter widgets script baseline."
-require_contains "README.md" "no-referrer policy" \
-  "README must document the Twitter widgets referrer policy."
+require_contains "README.md" "no automatic third-party script requests" \
+  "README must document the third-party script removal."
+require_contains "README.md" "self-contained Web Intent links" \
+  "README must document the user-triggered Twitter sharing baseline."
+require_contains "README.md" "stacks the overview grid on" \
+  "README must document the responsive static-page guard."
 require_contains "README.md" "Twitter share links also use a no-referrer policy" \
   "README must document the Twitter share link referrer policy."
 require_contains "README.md" "document-wide no-referrer policy" \
@@ -108,7 +125,9 @@ require_contains "README.md" "opacity mixin uses its declared parameter" \
 require_contains "README.md" "button snippet uses its declared border radius parameter" \
   "README must document the button demo snippet guard."
 require_file "Makefile"
-require_contains "Makefile" "scripts/check-baseline.sh" \
+require_contains "Makefile" 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' \
+  "Makefile must resolve repository-root commands from its own location."
+require_contains "Makefile" '$(ROOT)scripts/check-baseline.sh' \
   "Makefile must run the static baseline check."
 require_contains "Makefile" "lint:" \
   "Makefile must expose a lint gate."
@@ -128,6 +147,10 @@ require_contains ".github/workflows/check.yml" "workflow_dispatch:" \
   "GitHub Actions check workflow must support manual verification."
 require_contains ".github/workflows/check.yml" "timeout-minutes: 5" \
   "GitHub Actions check workflow must bound baseline execution."
+require_contains ".github/workflows/check.yml" "runs-on: ubuntu-24.04" \
+  "GitHub Actions check workflow must use a stable hosted runner image."
+require_contains ".github/workflows/check.yml" "cancel-in-progress: true" \
+  "GitHub Actions check workflow must cancel superseded runs."
 require_contains ".github/workflows/check.yml" "run: make check" \
   "GitHub Actions check workflow must run the static make check baseline."
 
@@ -156,19 +179,32 @@ if grep -F 'target="_blank"' "$INDEX" | grep -Fvq 'rel="noopener noreferrer"'; t
   exit 1
 fi
 
-TWITTER_WIDGET_COUNT=$(grep -Foc 'src="https://platform.twitter.com/widgets.js"' "$INDEX")
-if [ "$TWITTER_WIDGET_COUNT" -ne 1 ]; then
-  printf '%s\n' "index.html must load the Twitter widgets script exactly once." >&2
+if grep -Fq 'platform.twitter.com/widgets.js' "$INDEX"; then
+  printf '%s\n' "index.html must not contact the Twitter widgets runtime on page load." >&2
   exit 1
 fi
 
-if grep -F 'href="https://twitter.com/share"' "$INDEX" | grep -Fvq 'referrerpolicy="no-referrer"'; then
-  printf '%s\n' "Twitter share links must not send a referrer." >&2
+if grep -Fq 'twitter-share-button' "$INDEX" || grep -Fq 'data-url=' "$INDEX" || grep -Fq 'data-via=' "$INDEX"; then
+  printf '%s\n' "Twitter share links must not depend on widget-only markup." >&2
   exit 1
 fi
 
-require_contains "index.html" '<script type="text/javascript" async referrerpolicy="no-referrer" src="https://platform.twitter.com/widgets.js"></script>' \
-  "Twitter widgets script must load asynchronously without sending a referrer."
+TWITTER_INTENT='href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fwww.markdotto.com%2F2011%2F03%2F21%2Fintroducing-bootstrap%2F&amp;via=mdo"'
+TWITTER_INTENT_COUNT=$(grep -Foc "$TWITTER_INTENT" "$INDEX")
+if [ "$TWITTER_INTENT_COUNT" -ne 2 ]; then
+  printf '%s\n' "index.html must expose exactly two encoded Twitter Web Intent links." >&2
+  exit 1
+fi
+
+if grep -F "$TWITTER_INTENT" "$INDEX" | grep -Fvq 'target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"'; then
+  printf '%s\n' "Twitter Web Intent links must isolate new tabs and suppress referrers." >&2
+  exit 1
+fi
+
+if [ "$(grep -Foc '>Share on Twitter</a>' "$INDEX")" -ne 2 ]; then
+  printf '%s\n' "Twitter Web Intent links must expose descriptive link text." >&2
+  exit 1
+fi
 require_contains "docs/plans/2026-06-09-static-opacity-mixin-variable.md" "Status: Completed" \
   "Opacity mixin plan must record completed status."
 require_contains "docs/plans/2026-06-09-static-opacity-mixin-variable.md" "make check" \
@@ -205,5 +241,9 @@ require_contains "$CI_PLAN" "Status: Completed" \
   "Static CI baseline plan must record completed status."
 require_contains "$CI_PLAN" "make check" \
   "Static CI baseline plan must record make check verification."
+require_contains "$TWITTER_INTENT_PLAN" "Status: Completed" \
+  "Static Twitter intent plan must record completed status."
+require_contains "$TWITTER_INTENT_PLAN" "make check" \
+  "Static Twitter intent plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."
