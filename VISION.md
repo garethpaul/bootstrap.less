@@ -27,6 +27,7 @@ Priority:
 - Keep the historical grid readable without horizontal page overflow
 - Keep external share-link referrer behavior constrained and documented
 - Keep external sharing explicit and user-triggered through ordinary links
+- Keep the long reference page navigable by keyboard and document landmarks
 - Keep static link attributes valid without relying on browser repair
 - Keep root lint, test, and build gates tied to the static source baseline
 - Keep GitHub Actions running the static `make check` baseline before review

@@ -60,7 +60,7 @@ pushes, pull requests, and manual dispatches. The workflow uses a
 commit-pinned checkout action, read-only repository access, and a bounded
 runtime.
 
-This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, and user-triggered Twitter sharing with no automatic third-party script requests.
+This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, keyboard skip navigation to a main landmark, visible link focus states, and user-triggered Twitter sharing with no automatic third-party script requests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -93,6 +93,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Mailto query strings stay URL-encoded so static links remain valid.
 - The visible button snippet uses its declared border radius parameter, matching
   the checked-in `.button()` mixin.
+- The long reference page starts with a keyboard-accessible skip link targeting
+  its single focusable `main` landmark, and links keep a visible focus outline.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the static
   source baseline available without introducing a package manager, including
   when invoked outside the repository root with `make -f`.
