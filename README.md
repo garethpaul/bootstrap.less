@@ -59,9 +59,10 @@ GitHub Actions runs `make check` through `.github/workflows/check.yml` on
 pushes, pull requests, and manual dispatches. The workflow uses a
 commit-pinned checkout action, read-only repository access, and a bounded
 runtime.
-CodeQL analyzes the GitHub Actions and checked-in JavaScript surfaces with
-pinned, credential-free, no-build jobs on pushes, pull requests, schedules,
-and manual dispatches.
+GitHub CodeQL default setup analyzes GitHub Actions. It is intentionally not
+duplicated by an advanced workflow; the checked-in browser JavaScript remains
+outside the successful default-setup result and needs a separately validated
+analysis path.
 
 This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, keyboard skip navigation to a main landmark, visible link focus states, and user-triggered Twitter sharing with no automatic third-party script requests.
 

@@ -31,7 +31,7 @@ Priority:
 - Keep static link attributes valid without relying on browser repair
 - Keep root lint, test, and build gates tied to the static source baseline
 - Keep GitHub Actions running the static `make check` baseline before review
-- Keep pinned CodeQL coverage for Actions and checked-in browser JavaScript
+- Keep CodeQL default-setup coverage for Actions and close the browser JavaScript analysis gap separately
 - Make historical dependencies explicit
 - Avoid modern CSS rewrites that erase the original learning value
 

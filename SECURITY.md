@@ -45,9 +45,10 @@ Dependency updates should come from trusted package managers and should keep loc
 
 ## Safe Research Guidelines
 
-CodeQL results cover GitHub Actions and the checked-in browser JavaScript.
-Triage findings without replacing the exact static source contracts or
-modernizing the historical LESS runtime inside an unrelated security fix.
+CodeQL default-setup results cover GitHub Actions. The checked-in browser
+JavaScript is not covered by the successful default-setup job; triage that gap
+without replacing the exact static source contracts or modernizing the
+historical LESS runtime inside an unrelated security fix.
 
 Good-faith research is welcome when it stays within these boundaries:
 

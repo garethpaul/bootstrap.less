@@ -2,8 +2,8 @@
 
 ## 2026-06-12
 
-- Added pinned CodeQL analysis for GitHub Actions and checked-in JavaScript
-  with exact workflow contracts and least-privilege result upload.
+- Documented GitHub CodeQL default setup for Actions, rejected a conflicting
+  advanced workflow, and recorded the browser JavaScript analysis gap.
 - Added a keyboard skip link and a single focusable main landmark around the
   long Bootstrap.less reference content.
 - Added explicit high-contrast link focus styling and an SDK-free regression

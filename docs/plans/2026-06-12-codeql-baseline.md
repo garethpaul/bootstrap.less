@@ -9,17 +9,17 @@ execution: code
 
 ## Summary
 
-Add pinned CodeQL analysis for GitHub Actions and the checked-in browser
-JavaScript without changing the historical LESS 1.1.3 demo or page behavior.
+Document and guard the repository's existing GitHub CodeQL default setup for
+Actions without changing the historical LESS 1.1.3 demo or page behavior.
 
 ## Requirements
 
-- Analyze `actions` and `javascript-typescript` on pushes, pull requests,
-  schedules, and manual dispatches using no-build mode.
-- Keep immutable action pins, exact least-privilege permissions, non-persisted
-  checkout credentials, bounded jobs, and superseded-run cancellation.
-- Extend the static checker for workflow inventory, languages, pins,
-  permissions, bypasses, documentation, and completed evidence.
+- Preserve GitHub default setup analysis for `actions` as the repository-owned
+  external security setting.
+- Do not add an advanced CodeQL workflow while default setup is active because
+  GitHub rejects the conflicting configuration modes.
+- Extend the static checker to reject extra and advanced CodeQL workflows and
+  require truthful documentation of the browser JavaScript analysis gap.
 - Preserve `index.html`, LESS sources, the checked-in LESS runtime, and the
   canonical Check workflow unchanged.
 - Pass repository/external-working-directory checks, YAML parsing, hostile
@@ -27,15 +27,16 @@ JavaScript without changing the historical LESS 1.1.3 demo or page behavior.
 
 ## Scope And Verification
 
-This unit changes only the CodeQL workflow, checker contracts, guidance, and
-evidence. It does not change browser markup, styling, scripts, or behavior.
+This unit changes only checker contracts, guidance, and evidence. It does not
+change browser markup, styling, scripts, or behavior.
 
 ## Work Completed
 
-- Added pinned no-build CodeQL analysis for Actions and JavaScript/TypeScript.
-- Kept exact permissions, credential-free checkout, bounded runtime, schedule,
-  triggers, concurrency, language matrix, and action pins in a byte-for-byte
-  checker contract.
+- Recorded that GitHub default setup analyzes Actions.
+- Removed the conflicting advanced workflow after its Actions and JavaScript
+  jobs failed while the default-setup Actions job succeeded.
+- Recorded that browser JavaScript remains uncovered; the failed advanced job
+  did not establish JavaScript coverage.
 - Preserved the static page, LESS sources, bundled runtime, and Check workflow.
 
 ## Verification Completed
@@ -43,11 +44,15 @@ evidence. It does not change browser markup, styling, scripts, or behavior.
 - The untouched baseline passed from the repository and an external working directory.
 - `make check` passed after implementation with the existing static-project
   test/build messages.
-- Focused hostile mutations rejected language, pin, permission, credential,
-  bypass, documentation, and incomplete-plan drift; all hostile mutations rejected.
+- Focused hostile mutations rejected duplicate CodeQL and extra workflows,
+  documentation drift, missing JavaScript-gap evidence, and incomplete-plan
+  drift; all hostile mutations rejected.
 - YAML parsing, shell syntax, `git diff --check`, and secret scanning passed.
 
 ## Hosted Verification
 
-Exact-head Check and CodeQL evidence will be recorded after push. Tracker
-reconciliation remains pending until both canonical events are terminal green.
+On head `af3a97e906037f9ecef910aa16e8ba3e0ad34eb3`, push and pull-request
+Check runs `27442002734` and `27442005816` succeeded. Default-setup Actions
+job `81118069693` succeeded, while duplicate advanced run `27442005884`
+failed for Actions and JavaScript/TypeScript. Exact-head replacement evidence
+remains pending after the conflicting workflow removal.
