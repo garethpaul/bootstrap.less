@@ -11,6 +11,8 @@ VIEWPORT_PLAN="docs/plans/2026-06-09-static-viewport-meta-baseline.md"
 CI_PLAN="docs/plans/2026-06-10-ci-baseline.md"
 TWITTER_INTENT_PLAN="docs/plans/2026-06-10-static-twitter-intent-links.md"
 KEYBOARD_FOCUS_PLAN="docs/plans/2026-06-12-static-main-landmark-keyboard-focus.md"
+EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
+trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
 require_file() {
   path=$1
@@ -77,6 +79,17 @@ require_contains "style.less" "top: -100px;" \
   "The skip link must remain outside the normal visual flow until focused."
 require_contains "style.less" "outline: 3px solid rgba(255,255,255,.9);" \
   "Static page links must retain a high-contrast focus outline."
+
+skip_focus_rule=$(awk '/^a\.skip-link:focus \{$/,/^}$/' "$ROOT_DIR/style.less")
+expected_skip_focus_rule='a.skip-link:focus {
+  top: 20px;
+  color: darken(@purple, 20);
+  text-decoration: none;
+}'
+if [ "$skip_focus_rule" != "$expected_skip_focus_rule" ]; then
+  printf '%s\n' "The focused skip link must use the approved visible-position rule." >&2
+  exit 1
+fi
 require_contains "index.html" "less.watch();" \
   "index.html must preserve the browser LESS watch behavior."
 
@@ -177,22 +190,43 @@ require_contains "Makefile" "build:" \
   "Makefile must expose a build gate."
 require_contains "Makefile" "verify: lint test build" \
   "Makefile must expose a combined verify gate."
-require_contains ".github/workflows/check.yml" "uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" \
-  "GitHub Actions check workflow must pin the reviewed checkout commit."
-require_contains ".github/workflows/check.yml" "permissions:" \
-  "GitHub Actions check workflow must declare token permissions."
-require_contains ".github/workflows/check.yml" "contents: read" \
-  "GitHub Actions check workflow must keep repository access read-only."
-require_contains ".github/workflows/check.yml" "workflow_dispatch:" \
-  "GitHub Actions check workflow must support manual verification."
-require_contains ".github/workflows/check.yml" "timeout-minutes: 5" \
-  "GitHub Actions check workflow must bound baseline execution."
-require_contains ".github/workflows/check.yml" "runs-on: ubuntu-24.04" \
-  "GitHub Actions check workflow must use a stable hosted runner image."
-require_contains ".github/workflows/check.yml" "cancel-in-progress: true" \
-  "GitHub Actions check workflow must cancel superseded runs."
-require_contains ".github/workflows/check.yml" "run: make check" \
-  "GitHub Actions check workflow must run the static make check baseline."
+cat > "$EXPECTED_WORKFLOW" <<'EOF'
+name: Check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Run baseline
+        run: make check
+EOF
+workflow_paths=$(find "$ROOT_DIR/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) -print | sort)
+if [ "$workflow_paths" != "$ROOT_DIR/.github/workflows/check.yml" ]; then
+  printf '%s\n' "check.yml must remain the only approved GitHub Actions workflow." >&2
+  exit 1
+fi
+if ! cmp -s "$ROOT_DIR/.github/workflows/check.yml" "$EXPECTED_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions workflow must match the canonical credential-free baseline." >&2
+  exit 1
+fi
 
 if grep -Fq "http://" "$INDEX"; then
   printf '%s\n' "index.html must not contain insecure HTTP URLs." >&2
