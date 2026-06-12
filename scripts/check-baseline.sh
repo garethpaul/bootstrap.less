@@ -11,8 +11,10 @@ VIEWPORT_PLAN="docs/plans/2026-06-09-static-viewport-meta-baseline.md"
 CI_PLAN="docs/plans/2026-06-10-ci-baseline.md"
 TWITTER_INTENT_PLAN="docs/plans/2026-06-10-static-twitter-intent-links.md"
 KEYBOARD_FOCUS_PLAN="docs/plans/2026-06-12-static-main-landmark-keyboard-focus.md"
+CODEQL_PLAN="docs/plans/2026-06-12-codeql-baseline.md"
 EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
-trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
+EXPECTED_CODEQL=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-codeql.XXXXXX")
+trap 'rm -f "$EXPECTED_WORKFLOW" "$EXPECTED_CODEQL"' EXIT HUP INT TERM
 
 require_file() {
   path=$1
@@ -47,7 +49,9 @@ for path in \
   "$CI_PLAN" \
   "$TWITTER_INTENT_PLAN" \
   "$KEYBOARD_FOCUS_PLAN" \
+  "$CODEQL_PLAN" \
   ".github/workflows/check.yml" \
+  ".github/workflows/codeql.yml" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -218,15 +222,78 @@ jobs:
       - name: Run baseline
         run: make check
 EOF
+cat > "$EXPECTED_CODEQL" <<'EOF'
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '43 5 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, javascript-typescript]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+      - name: Analyze
+        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+EOF
 workflow_paths=$(find "$ROOT_DIR/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) -print | sort)
-if [ "$workflow_paths" != "$ROOT_DIR/.github/workflows/check.yml" ]; then
-  printf '%s\n' "check.yml must remain the only approved GitHub Actions workflow." >&2
+expected_workflow_paths=$(printf '%s\n' "$ROOT_DIR/.github/workflows/check.yml" "$ROOT_DIR/.github/workflows/codeql.yml" | sort)
+if [ "$workflow_paths" != "$expected_workflow_paths" ]; then
+  printf '%s\n' "Only the canonical Check and CodeQL workflows are approved." >&2
   exit 1
 fi
 if ! cmp -s "$ROOT_DIR/.github/workflows/check.yml" "$EXPECTED_WORKFLOW"; then
   printf '%s\n' "GitHub Actions workflow must match the canonical credential-free baseline." >&2
   exit 1
 fi
+if ! cmp -s "$ROOT_DIR/.github/workflows/codeql.yml" "$EXPECTED_CODEQL"; then
+  printf '%s\n' "CodeQL workflow must match the canonical pinned two-language baseline." >&2
+  exit 1
+fi
+
+require_contains "$CODEQL_PLAN" "status: completed" \
+  "CodeQL plan must record completed status."
+require_contains "$CODEQL_PLAN" "make check" \
+  "CodeQL plan must record make check verification."
+require_contains "$CODEQL_PLAN" "external working directory" \
+  "CodeQL plan must record location-independent verification."
+require_contains "$CODEQL_PLAN" "hostile mutations rejected" \
+  "CodeQL plan must record negative verification."
+require_contains "README.md" "CodeQL analyzes" \
+  "README must document CodeQL coverage."
+require_contains "SECURITY.md" "CodeQL results" \
+  "SECURITY must document CodeQL triage."
+require_contains "VISION.md" "CodeQL coverage" \
+  "VISION must preserve CodeQL coverage."
+require_contains "CHANGES.md" "CodeQL analysis" \
+  "CHANGES must record CodeQL analysis."
 
 if grep -Fq "http://" "$INDEX"; then
   printf '%s\n' "index.html must not contain insecure HTTP URLs." >&2

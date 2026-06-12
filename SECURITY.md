@@ -45,6 +45,10 @@ Dependency updates should come from trusted package managers and should keep loc
 
 ## Safe Research Guidelines
 
+CodeQL results cover GitHub Actions and the checked-in browser JavaScript.
+Triage findings without replacing the exact static source contracts or
+modernizing the historical LESS runtime inside an unrelated security fix.
+
 Good-faith research is welcome when it stays within these boundaries:
 
 - use only accounts, devices, data, and infrastructure that you own or have explicit permission to test
