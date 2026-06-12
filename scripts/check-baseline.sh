@@ -10,6 +10,7 @@ DOCUMENT_REFERRER_PLAN="docs/plans/2026-06-09-static-document-referrer-policy.md
 VIEWPORT_PLAN="docs/plans/2026-06-09-static-viewport-meta-baseline.md"
 CI_PLAN="docs/plans/2026-06-10-ci-baseline.md"
 TWITTER_INTENT_PLAN="docs/plans/2026-06-10-static-twitter-intent-links.md"
+KEYBOARD_FOCUS_PLAN="docs/plans/2026-06-12-static-main-landmark-keyboard-focus.md"
 EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
 trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
@@ -45,6 +46,7 @@ for path in \
   "$VIEWPORT_PLAN" \
   "$CI_PLAN" \
   "$TWITTER_INTENT_PLAN" \
+  "$KEYBOARD_FOCUS_PLAN" \
   ".github/workflows/check.yml" \
   "index.html" \
   "style.less" \
@@ -63,8 +65,53 @@ require_contains "index.html" 'src="less-1.1.3.min.js"' \
   "index.html must load the checked-in LESS runtime."
 require_contains "index.html" '<meta name="referrer" content="no-referrer">' \
   "index.html must set a document-wide no-referrer policy."
+require_contains "index.html" '<a class="skip-link" href="#main-content">Skip to main content</a>' \
+  "index.html must offer a skip link to the main reference content."
+require_contains "index.html" '<main id="main-content" tabindex="-1">' \
+  "index.html must expose a focusable main landmark for the skip link."
+require_contains "style.less" "&:focus {" \
+  "Static page links must preserve an explicit keyboard focus state."
+require_contains "style.less" "a.skip-link:focus" \
+  "The skip link must become visible when focused."
+require_contains "style.less" "main { display: block; }" \
+  "The main landmark must remain block-level in older browsers."
+require_contains "style.less" "top: -100px;" \
+  "The skip link must remain outside the normal visual flow until focused."
+require_contains "style.less" "outline: 3px solid rgba(255,255,255,.9);" \
+  "Static page links must retain a high-contrast focus outline."
+
+skip_focus_rule=$(awk '/^a\.skip-link:focus \{$/,/^}$/' "$ROOT_DIR/style.less")
+expected_skip_focus_rule='a.skip-link:focus {
+  top: 20px;
+  color: darken(@purple, 20);
+  text-decoration: none;
+}'
+if [ "$skip_focus_rule" != "$expected_skip_focus_rule" ]; then
+  printf '%s\n' "The focused skip link must use the approved visible-position rule." >&2
+  exit 1
+fi
 require_contains "index.html" "less.watch();" \
   "index.html must preserve the browser LESS watch behavior."
+
+if [ "$(grep -Foc '<a class="skip-link" href="#main-content">' "$INDEX")" -ne 1 ] || \
+   [ "$(grep -Foc '<main id="main-content" tabindex="-1">' "$INDEX")" -ne 1 ] || \
+   [ "$(grep -Foc '</main>' "$INDEX")" -ne 1 ]; then
+  printf '%s\n' "index.html must contain exactly one skip link and main landmark." >&2
+  exit 1
+fi
+
+skip_line=$(grep -Fn '<a class="skip-link" href="#main-content">' "$INDEX" | cut -d: -f1)
+header_line=$(grep -Fn '<header>' "$INDEX" | cut -d: -f1)
+main_line=$(grep -Fn '<main id="main-content" tabindex="-1">' "$INDEX" | cut -d: -f1)
+first_section_line=$(grep -Fn '<section>' "$INDEX" | head -n 1 | cut -d: -f1)
+main_end_line=$(grep -Fn '</main>' "$INDEX" | cut -d: -f1)
+footer_line=$(grep -Fn '<footer>' "$INDEX" | cut -d: -f1)
+
+if [ "$skip_line" -ge "$header_line" ] || [ "$main_line" -ge "$first_section_line" ] || \
+   [ "$main_end_line" -ge "$footer_line" ]; then
+  printf '%s\n' "Skip, main, section, and footer landmarks must remain in accessible source order." >&2
+  exit 1
+fi
 require_contains "index.html" 'href="mailto:hi@markdotto.com?subject=About%20Bootstrap"' \
   "Mailto query strings must be URL-encoded."
 require_contains "style.less" '@import "bootstrap.less";' \
@@ -126,6 +173,10 @@ require_contains "README.md" "opacity mixin uses its declared parameter" \
   "README must document the opacity mixin fix."
 require_contains "README.md" "button snippet uses its declared border radius parameter" \
   "README must document the button demo snippet guard."
+require_contains "README.md" "keyboard-accessible skip link" \
+  "README must document keyboard skip navigation."
+require_contains "README.md" "visible focus outline" \
+  "README must document the visible keyboard focus baseline."
 require_file "Makefile"
 require_contains "Makefile" 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' \
   "Makefile must resolve repository-root commands from its own location."
@@ -167,6 +218,11 @@ jobs:
       - name: Run baseline
         run: make check
 EOF
+workflow_paths=$(find "$ROOT_DIR/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) -print | sort)
+if [ "$workflow_paths" != "$ROOT_DIR/.github/workflows/check.yml" ]; then
+  printf '%s\n' "check.yml must remain the only approved GitHub Actions workflow." >&2
+  exit 1
+fi
 if ! cmp -s "$ROOT_DIR/.github/workflows/check.yml" "$EXPECTED_WORKFLOW"; then
   printf '%s\n' "GitHub Actions workflow must match the canonical credential-free baseline." >&2
   exit 1
@@ -263,5 +319,9 @@ require_contains "$TWITTER_INTENT_PLAN" "Status: Completed" \
   "Static Twitter intent plan must record completed status."
 require_contains "$TWITTER_INTENT_PLAN" "make check" \
   "Static Twitter intent plan must record make check verification."
+require_contains "$KEYBOARD_FOCUS_PLAN" "Status: Completed" \
+  "Static keyboard focus plan must record completed status."
+require_contains "$KEYBOARD_FOCUS_PLAN" "make check" \
+  "Static keyboard focus plan must record make check verification."
 
 printf '%s\n' "Bootstrap.less static baseline checks passed."

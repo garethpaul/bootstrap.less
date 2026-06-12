@@ -3,6 +3,7 @@ h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, cite, cod
 table { border-collapse: collapse; border-spacing: 0; }
 ol, ul { list-style: none; }
 q:before, q:after, blockquote:before, blockquote:after { content: ""; }
+main { display: block; }
 
 // Bootstrap it!
 @import "bootstrap.less";
@@ -36,6 +37,29 @@ a, a:visited {
     text-decoration: underline;
     text-shadow: 0 0 10px rgba(255,255,255,.75);
   }
+  &:focus {
+    color: @link-color;
+    text-decoration: underline;
+    outline: 3px solid rgba(255,255,255,.9);
+    outline-offset: 3px;
+  }
+}
+a.skip-link,
+a.skip-link:visited {
+  position: absolute;
+  top: -100px;
+  left: 20px;
+  z-index: 1000;
+  padding: 10px 14px;
+  background: #fff;
+  color: darken(@purple, 20);
+  text-shadow: none;
+  .border-radius(3px);
+}
+a.skip-link:focus {
+  top: 20px;
+  color: darken(@purple, 20);
+  text-decoration: none;
 }
 
 // Typography

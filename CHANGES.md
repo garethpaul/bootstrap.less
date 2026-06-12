@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-12
+
+- Added a keyboard skip link and a single focusable main landmark around the
+  long Bootstrap.less reference content.
+- Added explicit high-contrast link focus styling and an SDK-free regression
+  guard for skip-link target integrity and landmark source order.
+
 ## 2026-06-10
 
 - Replaced the page-load Twitter widgets runtime with two encoded, descriptive
