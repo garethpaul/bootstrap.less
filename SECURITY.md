@@ -49,6 +49,7 @@ CodeQL default-setup results cover GitHub Actions. The checked-in browser
 JavaScript is not covered by the successful default-setup job; triage that gap
 without replacing the exact static source contracts or modernizing the
 historical LESS runtime inside an unrelated security fix.
+The page keeps a Subresource Integrity binding for the reviewed LESS runtime bytes; runtime changes must update the reviewed file digest and HTML integrity value together after focused browser verification.
 
 Good-faith research is welcome when it stays within these boundaries:
 

@@ -20,6 +20,7 @@ Priority:
 - Preserve the LESS mixins, variables, and demo page
 - Keep the project usable as a static local example
 - Keep client-side LESS compilation one-time instead of continuously polling
+- Keep the checked-in LESS runtime bound to its reviewed integrity digest
 - Keep mixin parameters and generated CSS examples internally consistent
 - Keep visible demo snippets aligned with checked-in mixin signatures
 - Avoid automatic third-party script requests from the static page

@@ -13,6 +13,10 @@ TWITTER_INTENT_PLAN="docs/plans/2026-06-10-static-twitter-intent-links.md"
 KEYBOARD_FOCUS_PLAN="docs/plans/2026-06-12-static-main-landmark-keyboard-focus.md"
 CODEQL_PLAN="docs/plans/2026-06-12-codeql-baseline.md"
 LESS_ONE_TIME_PLAN="docs/plans/2026-06-13-static-less-one-time-compilation.md"
+LESS_RUNTIME_INTEGRITY_PLAN="docs/plans/2026-06-13-static-less-runtime-integrity.md"
+LESS_RUNTIME="$ROOT_DIR/less-1.1.3.min.js"
+LESS_RUNTIME_SHA256="3e332624c95775f84a3c021cea7d2f689eab4d7d7adcd07bf66683dc36c54bad"
+LESS_RUNTIME_TAG='<script type="text/javascript" src="less-1.1.3.min.js" integrity="sha256-PjMmJMlXdfhKPAIc6n0vaJ6rTX163NB79maD3DbFS60=" crossorigin="anonymous"></script>'
 EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
 trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
@@ -51,7 +55,9 @@ for path in \
   "$KEYBOARD_FOCUS_PLAN" \
   "$CODEQL_PLAN" \
   "$LESS_ONE_TIME_PLAN" \
+  "$LESS_RUNTIME_INTEGRITY_PLAN" \
   ".github/workflows/check.yml" \
+  "SECURITY.md" \
   "index.html" \
   "style.less" \
   "bootstrap.less" \
@@ -105,12 +111,24 @@ if grep -Fq 'less.env = "development"' "$INDEX" || \
 fi
 
 less_config_line=$(grep -Fn 'window.less = { env: "production" };' "$INDEX" | cut -d: -f1)
-less_runtime_line=$(grep -Fn '<script type="text/javascript" src="less-1.1.3.min.js"></script>' "$INDEX" | cut -d: -f1)
+less_runtime_line=$(grep -Fn "$LESS_RUNTIME_TAG" "$INDEX" | cut -d: -f1)
 if [ "$(grep -Fc 'window.less = { env: "production" };' "$INDEX")" -ne 1 ] || \
    [ "$(grep -Fc 'src="less-1.1.3.min.js"' "$INDEX")" -ne 1 ] || \
+   [ "$(grep -Fc "$LESS_RUNTIME_TAG" "$INDEX")" -ne 1 ] || \
    [ -z "$less_config_line" ] || [ -z "$less_runtime_line" ] || \
    [ "$less_config_line" -ge "$less_runtime_line" ]; then
   printf '%s\n' "The single LESS production configuration must precede the single runtime load." >&2
+  exit 1
+fi
+
+actual_less_runtime_sha256=$(sha256sum "$LESS_RUNTIME" | awk '{print $1}')
+if [ "$actual_less_runtime_sha256" != "$LESS_RUNTIME_SHA256" ]; then
+  printf '%s\n' "Checked-in LESS runtime bytes must match the reviewed SHA-256 digest." >&2
+  exit 1
+fi
+
+if grep -F 'src="less-1.1.3.min.js"' "$INDEX" | grep -Fvq 'integrity="sha256-PjMmJMlXdfhKPAIc6n0vaJ6rTX163NB79maD3DbFS60=" crossorigin="anonymous"'; then
+  printf '%s\n' "The LESS runtime script must keep its exact integrity and anonymous CORS attributes." >&2
   exit 1
 fi
 
@@ -131,6 +149,29 @@ for plan_contract in \
   "agent-browser"; do
   require_contains "$LESS_ONE_TIME_PLAN" "$plan_contract" \
     "One-time LESS compilation plan must record completed verification: $plan_contract"
+done
+
+if ! grep -Fq "pins the checked-in LESS runtime with Subresource Integrity" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "2026-06-13-static-less-runtime-integrity.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the LESS runtime integrity pin and plan." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Subresource Integrity binding for the reviewed LESS runtime bytes" "$ROOT_DIR/SECURITY.md" || \
+   ! grep -Fq "Keep the checked-in LESS runtime bound to its reviewed integrity digest" "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq "Bound the checked-in LESS 1.1.3 runtime to its reviewed SHA-256 digest" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Repository guidance must document the LESS runtime integrity boundary." >&2
+  exit 1
+fi
+
+for integrity_plan_contract in \
+  "status: completed" \
+  "## Status: Completed" \
+  "make check" \
+  "isolated hostile mutations were rejected" \
+  "headless Chrome"; do
+  require_contains "$LESS_RUNTIME_INTEGRITY_PLAN" "$integrity_plan_contract" \
+    "LESS runtime integrity plan must record completed verification: $integrity_plan_contract"
 done
 
 if [ "$(grep -Foc '<a class="skip-link" href="#main-content">' "$INDEX")" -ne 1 ] || \

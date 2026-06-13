@@ -1,13 +1,13 @@
 ---
 title: Static LESS Runtime Integrity Pin
 type: security
-status: planned
+status: completed
 date: 2026-06-13
 ---
 
 # Static LESS Runtime Integrity Pin
 
-## Status: Planned
+## Status: Completed
 
 ## Problem Frame
 
@@ -72,13 +72,18 @@ Approach:
 - Require completed plan and limited browser-verification evidence in the
   static gate.
 
-## Verification Plan
+## Verification
 
-- Run `make check` and `make verify` from the repository and absolute-path
-  `make check` from `/tmp`.
-- Run `sh -n scripts/check-baseline.sh`, `git diff --check`, and a standard
-  library HTML parse.
-- Serve the repository on a bounded local HTTP server and use bounded headless
-  Chrome to confirm the integrity-pinned runtime still injects compiled CSS.
-- Require isolated hostile mutations of the file digest, integrity attribute,
-  CORS attribute, script count, documentation, and plan evidence to fail.
+- `make check` and `make verify` passed the static source baseline and all root
+  wrappers.
+- Absolute-path `make check` passed from `/tmp`.
+- `sh -n scripts/check-baseline.sh`, `git diff --check`, and Python's
+  standard-library HTML parser passed.
+- A bounded local HTTP server and bounded headless Chrome confirmed that the
+  integrity-pinned runtime injected the compiled `style.less` output without an
+  integrity error.
+- Nine isolated hostile mutations were rejected across runtime bytes, integrity
+  value, missing integrity, CORS mode, duplicate load, runtime source, README,
+  security guidance, and headless Chrome evidence.
+- The historical runtime still uses dynamic evaluation; no strict Content
+  Security Policy or dependency-modernization claim is made.

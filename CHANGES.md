@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Bound the checked-in LESS 1.1.3 runtime to its reviewed SHA-256 digest through
+  Subresource Integrity and an exact static source contract.
 - Configured the bundled LESS runtime for production before load and removed
   the permanent development watch loop.
 - Preserved client-side initial stylesheet compilation without adding generated
