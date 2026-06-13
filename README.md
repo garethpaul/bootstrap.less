@@ -99,6 +99,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   the checked-in `.button()` mixin.
 - The long reference page starts with a keyboard-accessible skip link targeting
   its single focusable `main` landmark, and links keep a visible focus outline.
+- Static viewing uses one-time production-mode LESS compilation instead of the
+  development watch loop, avoiding lifetime polling after the initial render.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the static
   source baseline available without introducing a package manager, including
   when invoked outside the repository root with `make -f`.
@@ -116,6 +118,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
 - See `docs/plans/2026-06-10-static-twitter-intent-links.md` for the
   user-triggered share-link and third-party script removal.
+- See `docs/plans/2026-06-13-static-less-one-time-compilation.md` for the
+  production-mode client-side compilation boundary.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

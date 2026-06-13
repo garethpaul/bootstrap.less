@@ -12,6 +12,7 @@ CI_PLAN="docs/plans/2026-06-10-ci-baseline.md"
 TWITTER_INTENT_PLAN="docs/plans/2026-06-10-static-twitter-intent-links.md"
 KEYBOARD_FOCUS_PLAN="docs/plans/2026-06-12-static-main-landmark-keyboard-focus.md"
 CODEQL_PLAN="docs/plans/2026-06-12-codeql-baseline.md"
+LESS_ONE_TIME_PLAN="docs/plans/2026-06-13-static-less-one-time-compilation.md"
 EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
 trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
@@ -49,6 +50,7 @@ for path in \
   "$TWITTER_INTENT_PLAN" \
   "$KEYBOARD_FOCUS_PLAN" \
   "$CODEQL_PLAN" \
+  "$LESS_ONE_TIME_PLAN" \
   ".github/workflows/check.yml" \
   "index.html" \
   "style.less" \
@@ -92,8 +94,44 @@ if [ "$skip_focus_rule" != "$expected_skip_focus_rule" ]; then
   printf '%s\n' "The focused skip link must use the approved visible-position rule." >&2
   exit 1
 fi
-require_contains "index.html" "less.watch();" \
-  "index.html must preserve the browser LESS watch behavior."
+require_contains "index.html" 'window.less = { env: "production" };' \
+  "index.html must configure one-time LESS compilation before loading the runtime."
+
+if grep -Fq 'less.env = "development"' "$INDEX" || \
+   grep -Fq "less.watch()" "$INDEX" || \
+   grep -Fq "!watch" "$INDEX"; then
+  printf '%s\n' "Static viewing must not enable the LESS development watch loop." >&2
+  exit 1
+fi
+
+less_config_line=$(grep -Fn 'window.less = { env: "production" };' "$INDEX" | cut -d: -f1)
+less_runtime_line=$(grep -Fn '<script type="text/javascript" src="less-1.1.3.min.js"></script>' "$INDEX" | cut -d: -f1)
+if [ "$(grep -Fc 'window.less = { env: "production" };' "$INDEX")" -ne 1 ] || \
+   [ "$(grep -Fc 'src="less-1.1.3.min.js"' "$INDEX")" -ne 1 ] || \
+   [ -z "$less_config_line" ] || [ -z "$less_runtime_line" ] || \
+   [ "$less_config_line" -ge "$less_runtime_line" ]; then
+  printf '%s\n' "The single LESS production configuration must precede the single runtime load." >&2
+  exit 1
+fi
+
+require_contains "less-1.1.3.min.js" 'd.refresh(d.env==="development")' \
+  "Bundled LESS runtime must retain its initial stylesheet refresh contract."
+
+if ! grep -Fq "one-time production-mode LESS compilation" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "2026-06-13-static-less-one-time-compilation.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document one-time LESS compilation and its plan." >&2
+  exit 1
+fi
+
+for plan_contract in \
+  "status: completed" \
+  "## Status: Completed" \
+  "make check" \
+  "Eight isolated hostile mutations were rejected" \
+  "agent-browser"; do
+  require_contains "$LESS_ONE_TIME_PLAN" "$plan_contract" \
+    "One-time LESS compilation plan must record completed verification: $plan_contract"
+done
 
 if [ "$(grep -Foc '<a class="skip-link" href="#main-content">' "$INDEX")" -ne 1 ] || \
    [ "$(grep -Foc '<main id="main-content" tabindex="-1">' "$INDEX")" -ne 1 ] || \

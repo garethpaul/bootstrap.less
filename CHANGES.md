@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-13
+
+- Configured the bundled LESS runtime for production before load and removed
+  the permanent development watch loop.
+- Preserved client-side initial stylesheet compilation without adding generated
+  CSS or a package-manager build.
+
 ## 2026-06-12
 
 - Documented GitHub CodeQL default setup for Actions, rejected a conflicting
