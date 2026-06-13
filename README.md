@@ -66,6 +66,11 @@ analysis path.
 
 This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, keyboard skip navigation to a main landmark, visible link focus states, and user-triggered Twitter sharing with no automatic third-party script requests.
 
+The page pins the checked-in LESS runtime with Subresource Integrity so the
+browser and static gate agree on the reviewed `less-1.1.3.min.js` bytes. This
+preserves the historical dependency; it does not claim that the legacy runtime
+is modern or covered by browser JavaScript CodeQL analysis.
+
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
@@ -120,6 +125,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   user-triggered share-link and third-party script removal.
 - See `docs/plans/2026-06-13-static-less-one-time-compilation.md` for the
   production-mode client-side compilation boundary.
+- See `docs/plans/2026-06-13-static-less-runtime-integrity.md` for the vendored
+  LESS runtime Subresource Integrity boundary.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 
