@@ -40,6 +40,8 @@ Helpful reports include:
 - The exact LESS 4.6.6 dependency graph is locked and CI installs it with
   lifecycle scripts disabled and unused optional compiler features omitted
   before verifying generated CSS freshness.
+- Build commands resolve the repository-local locked compiler directly and do
+  not trust an ambient `lessc` executable from the workstation `PATH`.
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
 - GitHub Actions runs the static `make check` baseline with a commit-pinned

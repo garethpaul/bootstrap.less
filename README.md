@@ -73,6 +73,8 @@ GitHub Actions; the page itself now has no browser JavaScript analysis surface.
 
 The repository pins LESS 4.6.6 and its transitive graph in `package-lock.json`;
 the generated style.css file remains committed for direct static deployment.
+Package scripts invoke that repository-local compiler directly and fail when
+the frozen install is absent instead of falling back to an ambient `lessc`.
 The install omits compiler features declared optional by LESS because this
 project compiles local files without URL fetching, image inspection, or source
 maps.
