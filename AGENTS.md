@@ -27,6 +27,8 @@
 
 - Use explicit parentheses for namespace mixin calls so LESS 4.6.6 compiles
   without deprecation warnings.
+- Package scripts must resolve LESS through `node_modules`; never fall back to
+  an ambient or global `lessc` executable.
 - Keep generated `style.css` byte-for-byte synchronized with the LESS sources.
 
 ## Testing guidance

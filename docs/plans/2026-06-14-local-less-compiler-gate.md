@@ -1,13 +1,13 @@
 ---
 title: Local LESS Compiler Gate
 type: reliability
-status: in_progress
+status: completed
 date: 2026-06-14
 ---
 
 # Local LESS Compiler Gate
 
-## Status: In Progress
+## Status: Completed
 
 ## Problem Frame
 
@@ -43,3 +43,27 @@ depend on workstation state.
   require each weakened variant to fail.
 - Audit the exact diff, generated artifacts, and credential-shaped text before
   committing only intended paths.
+
+## Work Completed
+
+- Replaced all bare `lessc` package commands with the repository-local locked
+  compiler entry point under `node_modules`.
+- Extended the dependency-free baseline to require the exact local commands
+  and reject an ambient-path fallback.
+- Documented the local compiler trust boundary across contributor, security,
+  vision, and change records without changing LESS sources or generated CSS.
+
+## Verification Results
+
+- The dependency-free baseline passed before dependency installation.
+- With `node_modules` absent, `npm run check:generated` failed at the explicit
+  repository-local compiler path instead of executing ambient LESS 2.7.2.
+- `npm ci --ignore-scripts --omit=optional` installed the frozen graph with zero
+  audit findings; the local compiler reported LESS 4.6.6.
+- `npm run lint:less`, `npm run check:generated`, `make check`, `make verify`,
+  and an external-working-directory `make check` all passed.
+- Ten isolated hostile mutations covering bare, npx, absolute-global,
+  version, documentation, and completed-evidence drift variants were rejected
+  by the dependency-free baseline.
+- `style.less`, `bootstrap.less`, `style.css`, and the lockfile remained
+  unchanged.

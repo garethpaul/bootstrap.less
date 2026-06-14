@@ -128,14 +128,20 @@ fi
 
 for package_contract in \
   '"private": true' \
-  '"build": "lessc --no-color style.less style.css"' \
-  '"check:generated": "lessc --no-color style.less | cmp - style.css"' \
-  '"lint:less": "lessc --lint --no-color style.less"' \
+  '"build": "node ./node_modules/less/bin/lessc --no-color style.less style.css"' \
+  '"check:generated": "node ./node_modules/less/bin/lessc --no-color style.less | cmp - style.css"' \
+  '"lint:less": "node ./node_modules/less/bin/lessc --lint --no-color style.less"' \
   '"node": ">=20.19"' \
   '"less": "4.6.6"'; do
   require_contains "package.json" "$package_contract" \
     "package.json must preserve build contract: $package_contract"
 done
+
+if grep -Eq '"(build|check:generated|lint:less)": "lessc([[:space:]]|$)' \
+    "$ROOT_DIR/package.json"; then
+  printf '%s\n' "Package scripts must not resolve LESS from the ambient PATH." >&2
+  exit 1
+fi
 
 require_contains "package-lock.json" '"lockfileVersion": 3' \
   "package-lock.json must use the current deterministic lockfile format."
@@ -224,6 +230,8 @@ require_contains "README.md" "GitHub Actions" \
   "README must document the GitHub Actions baseline."
 require_contains "README.md" "npm ci --ignore-scripts --omit=optional" \
   "README must document the reduced frozen dependency install."
+require_contains "README.md" 'repository-local compiler directly' \
+  "README must document repository-local LESS compiler resolution."
 require_contains "README.md" "generated style.css" \
   "README must document the generated deployment stylesheet."
 require_contains "README.md" "executes no project JavaScript" \
@@ -252,6 +260,20 @@ require_contains "README.md" "keyboard-accessible skip link" \
   "README must document keyboard skip navigation."
 require_contains "README.md" "visible focus outline" \
   "README must document the visible keyboard focus baseline."
+require_contains "AGENTS.md" 'never fall back to' \
+  "Agent guidance must reject ambient LESS compiler fallback."
+require_contains "SECURITY.md" 'not trust an ambient `lessc`' \
+  "Security guidance must document the ambient compiler boundary."
+require_contains "VISION.md" 'repository-local locked LESS compiler' \
+  "Vision guidance must preserve repository-local compiler resolution."
+require_contains "CHANGES.md" 'instead of using an ambient executable' \
+  "Change history must record the local compiler correction."
+require_contains "docs/plans/2026-06-14-local-less-compiler-gate.md" \
+  'status: completed' \
+  "Local compiler gate plan must record completed status."
+require_contains "docs/plans/2026-06-14-local-less-compiler-gate.md" \
+  'Ten isolated hostile mutations' \
+  "Local compiler gate plan must record mutation verification."
 require_file "Makefile"
 require_contains "Makefile" 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' \
   "Makefile must resolve repository-root commands from its own location."

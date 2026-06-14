@@ -7,6 +7,8 @@
 - Added a pinned LESS 4.6.6 build with a frozen lockfile, warning-free source
   syntax, generated-output drift checks, and a script-disabled CI install that
   omits unused optional compiler features.
+- Bound package scripts to the repository-local LESS compiler so missing
+  dependencies fail explicitly instead of using an ambient executable.
 - Contained long code-sample overflow so the generated page remains within a
   375px mobile viewport.
 

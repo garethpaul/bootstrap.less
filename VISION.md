@@ -52,6 +52,7 @@ Contribution rules:
 - Keep the static demo directly runnable from committed generated CSS.
 - Keep `.github/workflows/check.yml` aligned with the frozen dependency install
   and generated-output gate.
+- Keep build commands bound to the repository-local locked LESS compiler.
 - Do not replace the project with modern Bootstrap assets.
 - Preserve attribution comments and historical context.
 

@@ -4,9 +4,9 @@
   "private": true,
   "description": "Static Bootstrap.less reference demo",
   "scripts": {
-    "build": "lessc --no-color style.less style.css",
-    "check:generated": "lessc --no-color style.less | cmp - style.css",
-    "lint:less": "lessc --lint --no-color style.less"
+    "build": "node ./node_modules/less/bin/lessc --no-color style.less style.css",
+    "check:generated": "node ./node_modules/less/bin/lessc --no-color style.less | cmp - style.css",
+    "lint:less": "node ./node_modules/less/bin/lessc --lint --no-color style.less"
   },
   "engines": {
     "node": ">=20.19"
