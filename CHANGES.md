@@ -1,5 +1,15 @@
 # Changes
 
+## 2026-06-14
+
+- Replaced browser-side LESS 1.1.3 execution with committed generated CSS and a
+  restrictive script-free Content Security Policy.
+- Added a pinned LESS 4.6.6 build with a frozen lockfile, warning-free source
+  syntax, generated-output drift checks, and a script-disabled CI install that
+  omits unused optional compiler features.
+- Contained long code-sample overflow so the generated page remains within a
+  375px mobile viewport.
+
 ## 2026-06-13
 
 - Bound the checked-in LESS 1.1.3 runtime to its reviewed SHA-256 digest through

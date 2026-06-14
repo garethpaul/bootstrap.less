@@ -6,13 +6,16 @@
 
 ## Project structure
 
-- `Makefile` - repository verification targets
+- `Makefile` - repository build and verification targets
+- `package.json` and `package-lock.json` - pinned LESS compiler graph
+- `style.less` and `bootstrap.less` - maintained stylesheet sources
+- `style.css` - generated deployment stylesheet; do not hand-edit
 - `scripts` - baseline checks and helper scripts
 - `docs` - plans, notes, and generated README assets
 
 ## Development commands
 
-- Install dependencies: no repository-specific install command is documented.
+- Install dependencies: `npm ci --ignore-scripts --omit=optional`
 - Full baseline: `make check`
 - Combined verification: `make verify`
 - Lint/static checks: `make lint`
@@ -22,7 +25,9 @@
 
 ## Coding conventions
 
-- Language mix noted in the README: JavaScript (1), shell (1).
+- Use explicit parentheses for namespace mixin calls so LESS 4.6.6 compiles
+  without deprecation warnings.
+- Keep generated `style.css` byte-for-byte synchronized with the LESS sources.
 
 ## Testing guidance
 
@@ -41,15 +46,21 @@
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - The opacity mixin uses its declared parameter for all generated opacity rules.
-- The Twitter widgets script is loaded once, asynchronously, with a `no-referrer` policy.
-- The page sets a document-wide no-referrer policy before loading styles, scripts, or outbound links.
+- The page executes no project JavaScript and must keep its script-free Content
+  Security Policy.
+- The page sets a document-wide no-referrer policy before loading styles or
+  outbound links.
 - Twitter share links also use a no-referrer policy before handing off to the external share endpoint.
 - Mailto query strings stay URL-encoded so static links remain valid.
+- Long code samples contain horizontal overflow instead of widening the mobile
+  document.
 
 ## Agent workflow
 
 1. Inspect the README, Makefile, manifests, and the files directly related to the request.
-2. Make the smallest source or docs change that satisfies the task; avoid generated, vendored, or local-environment files unless required.
+2. Make the smallest source or docs change that satisfies the task; regenerate
+   `style.css` when LESS sources change, but avoid dependency directories and
+   local-environment files.
 3. Run the narrowest useful validation first, then `make check` or the documented package/platform gate when available.
 4. If a required SDK, service credential, or external runtime is unavailable, record the skipped command and why.
 5. Summarize changed files, commands run, and remaining risks or follow-up validation.

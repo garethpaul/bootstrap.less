@@ -14,9 +14,7 @@ KEYBOARD_FOCUS_PLAN="docs/plans/2026-06-12-static-main-landmark-keyboard-focus.m
 CODEQL_PLAN="docs/plans/2026-06-12-codeql-baseline.md"
 LESS_ONE_TIME_PLAN="docs/plans/2026-06-13-static-less-one-time-compilation.md"
 LESS_RUNTIME_INTEGRITY_PLAN="docs/plans/2026-06-13-static-less-runtime-integrity.md"
-LESS_RUNTIME="$ROOT_DIR/less-1.1.3.min.js"
-LESS_RUNTIME_SHA256="3e332624c95775f84a3c021cea7d2f689eab4d7d7adcd07bf66683dc36c54bad"
-LESS_RUNTIME_TAG='<script type="text/javascript" src="less-1.1.3.min.js" integrity="sha256-PjMmJMlXdfhKPAIc6n0vaJ6rTX163NB79maD3DbFS60=" crossorigin="anonymous"></script>'
+STATIC_CSS_BUILD_PLAN="docs/plans/2026-06-14-static-css-build-migration.md"
 EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
 trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
@@ -56,12 +54,16 @@ for path in \
   "$CODEQL_PLAN" \
   "$LESS_ONE_TIME_PLAN" \
   "$LESS_RUNTIME_INTEGRITY_PLAN" \
+  "$STATIC_CSS_BUILD_PLAN" \
   ".github/workflows/check.yml" \
+  ".gitignore" \
   "SECURITY.md" \
   "index.html" \
+  "package.json" \
+  "package-lock.json" \
+  "style.css" \
   "style.less" \
-  "bootstrap.less" \
-  "less-1.1.3.min.js"; do
+  "bootstrap.less"; do
   require_file "$path"
 done
 
@@ -69,12 +71,12 @@ require_contains "index.html" "<title>Bootstrap.less</title>" \
   "index.html must contain a valid title tag."
 require_contains "index.html" '<meta name="viewport" content="width=device-width, initial-scale=1">' \
   "index.html must include a mobile viewport baseline."
-require_contains "index.html" 'href="style.less"' \
-  "index.html must load the demo LESS file."
-require_contains "index.html" 'src="less-1.1.3.min.js"' \
-  "index.html must load the checked-in LESS runtime."
+require_contains "index.html" '<link rel="stylesheet" type="text/css" media="all" href="style.css">' \
+  "index.html must load the generated CSS artifact."
 require_contains "index.html" '<meta name="referrer" content="no-referrer">' \
   "index.html must set a document-wide no-referrer policy."
+require_contains "index.html" '<meta http-equiv="Content-Security-Policy" content="default-src '\''none'\''; style-src '\''self'\''; img-src '\''self'\''; base-uri '\''none'\''; form-action '\''none'\''">' \
+  "index.html must enforce the approved script-free Content Security Policy."
 require_contains "index.html" '<a class="skip-link" href="#main-content">Skip to main content</a>' \
   "index.html must offer a skip link to the main reference content."
 require_contains "index.html" '<main id="main-content" tabindex="-1">' \
@@ -100,78 +102,66 @@ if [ "$skip_focus_rule" != "$expected_skip_focus_rule" ]; then
   printf '%s\n' "The focused skip link must use the approved visible-position rule." >&2
   exit 1
 fi
-require_contains "index.html" 'window.less = { env: "production" };' \
-  "index.html must configure one-time LESS compilation before loading the runtime."
-
-if grep -Fq 'less.env = "development"' "$INDEX" || \
-   grep -Fq "less.watch()" "$INDEX" || \
-   grep -Fq "!watch" "$INDEX"; then
-  printf '%s\n' "Static viewing must not enable the LESS development watch loop." >&2
+if grep -Eiq '<script([[:space:]>])|javascript:' "$INDEX"; then
+  printf '%s\n' "The static page must not execute project JavaScript." >&2
   exit 1
 fi
 
-less_config_line=$(grep -Fn 'window.less = { env: "production" };' "$INDEX" | cut -d: -f1)
-less_runtime_line=$(grep -Fn "$LESS_RUNTIME_TAG" "$INDEX" | cut -d: -f1)
-if [ "$(grep -Fc 'window.less = { env: "production" };' "$INDEX")" -ne 1 ] || \
-   [ "$(grep -Fc 'src="less-1.1.3.min.js"' "$INDEX")" -ne 1 ] || \
-   [ "$(grep -Fc "$LESS_RUNTIME_TAG" "$INDEX")" -ne 1 ] || \
-   [ -z "$less_config_line" ] || [ -z "$less_runtime_line" ] || \
-   [ "$less_config_line" -ge "$less_runtime_line" ]; then
-  printf '%s\n' "The single LESS production configuration must precede the single runtime load." >&2
+if [ -e "$ROOT_DIR/less-1.1.3.min.js" ] || \
+   grep -Eiq 'less-1\.1\.3|min\.js|stylesheet/less|window\.less|less\.watch' "$INDEX"; then
+  printf '%s\n' "The legacy browser LESS runtime and runtime markup must remain removed." >&2
   exit 1
 fi
 
-actual_less_runtime_sha256=$(sha256sum "$LESS_RUNTIME" | awk '{print $1}')
-if [ "$actual_less_runtime_sha256" != "$LESS_RUNTIME_SHA256" ]; then
-  printf '%s\n' "Checked-in LESS runtime bytes must match the reviewed SHA-256 digest." >&2
+if [ "$(grep -Foc 'href="style.css"' "$INDEX")" -ne 1 ] || \
+   [ "$(grep -Ec '<link[[:space:]][^>]*rel="stylesheet"' "$INDEX")" -ne 1 ]; then
+  printf '%s\n' "The page must load exactly one generated stylesheet." >&2
   exit 1
 fi
 
-if grep -F 'src="less-1.1.3.min.js"' "$INDEX" | grep -Fvq 'integrity="sha256-PjMmJMlXdfhKPAIc6n0vaJ6rTX163NB79maD3DbFS60=" crossorigin="anonymous"'; then
-  printf '%s\n' "The LESS runtime script must keep its exact integrity and anonymous CORS attributes." >&2
+if grep -Eh '#(flexbox|reset)[[:space:]]*>[[:space:]]*\.[[:alnum:]_-]+[[:space:]]*;' \
+    "$ROOT_DIR/style.less" "$ROOT_DIR/bootstrap.less" | \
+    grep -Ev '^[[:space:]]*//' >/dev/null; then
+  printf '%s\n' "LESS namespace mixin calls must use explicit parentheses." >&2
   exit 1
 fi
 
-require_contains "less-1.1.3.min.js" 'd.refresh(d.env==="development")' \
-  "Bundled LESS runtime must retain its initial stylesheet refresh contract."
-
-if ! grep -Fq "one-time production-mode LESS compilation" "$ROOT_DIR/README.md" || \
-   ! grep -Fq "2026-06-13-static-less-one-time-compilation.md" "$ROOT_DIR/README.md"; then
-  printf '%s\n' "README must document one-time LESS compilation and its plan." >&2
-  exit 1
-fi
-
-for plan_contract in \
-  "status: completed" \
-  "## Status: Completed" \
-  "make check" \
-  "Eight isolated hostile mutations were rejected" \
-  "agent-browser"; do
-  require_contains "$LESS_ONE_TIME_PLAN" "$plan_contract" \
-    "One-time LESS compilation plan must record completed verification: $plan_contract"
+for package_contract in \
+  '"private": true' \
+  '"build": "lessc --no-color style.less style.css"' \
+  '"check:generated": "lessc --no-color style.less | cmp - style.css"' \
+  '"lint:less": "lessc --lint --no-color style.less"' \
+  '"node": ">=20.19"' \
+  '"less": "4.6.6"'; do
+  require_contains "package.json" "$package_contract" \
+    "package.json must preserve build contract: $package_contract"
 done
 
-if ! grep -Fq "pins the checked-in LESS runtime with Subresource Integrity" "$ROOT_DIR/README.md" || \
-   ! grep -Fq "2026-06-13-static-less-runtime-integrity.md" "$ROOT_DIR/README.md"; then
-  printf '%s\n' "README must document the LESS runtime integrity pin and plan." >&2
-  exit 1
-fi
+require_contains "package-lock.json" '"lockfileVersion": 3' \
+  "package-lock.json must use the current deterministic lockfile format."
+require_contains "package-lock.json" '"node_modules/less"' \
+  "package-lock.json must resolve the pinned LESS compiler."
+require_contains ".gitignore" "node_modules/" \
+  "Dependency installation artifacts must remain ignored."
+require_contains "style.css" "a.skip-link:focus" \
+  "Generated CSS must retain skip-link focus behavior."
+require_contains "style.css" "@media (max-width: 700px)" \
+  "Generated CSS must retain narrow-screen behavior."
 
-if ! grep -Fq "Subresource Integrity binding for the reviewed LESS runtime bytes" "$ROOT_DIR/SECURITY.md" || \
-   ! grep -Fq "Keep the checked-in LESS runtime bound to its reviewed integrity digest" "$ROOT_DIR/VISION.md" || \
-   ! grep -Fq "Bound the checked-in LESS 1.1.3 runtime to its reviewed SHA-256 digest" "$ROOT_DIR/CHANGES.md"; then
-  printf '%s\n' "Repository guidance must document the LESS runtime integrity boundary." >&2
-  exit 1
-fi
-
-for integrity_plan_contract in \
+for static_css_plan_contract in \
   "status: completed" \
   "## Status: Completed" \
   "make check" \
-  "isolated hostile mutations were rejected" \
-  "headless Chrome"; do
-  require_contains "$LESS_RUNTIME_INTEGRITY_PLAN" "$integrity_plan_contract" \
-    "LESS runtime integrity plan must record completed verification: $integrity_plan_contract"
+  "15 hostile mutations" \
+  "headless Chrome" \
+  "375px"; do
+  require_contains "$STATIC_CSS_BUILD_PLAN" "$static_css_plan_contract" \
+    "Static CSS build plan must record completed verification: $static_css_plan_contract"
+done
+
+for script_free_doc in "AGENTS.md" "README.md" "SECURITY.md" "VISION.md" "CHANGES.md"; do
+  require_contains "$script_free_doc" "script-free" \
+    "$script_free_doc must document the script-free deployment boundary."
 done
 
 if [ "$(grep -Foc '<a class="skip-link" href="#main-content">' "$INDEX")" -ne 1 ] || \
@@ -205,6 +195,8 @@ require_contains "style.less" "div.span5" \
   "Static page must stack the two-column overview on narrow screens."
 require_contains "style.less" "float: none;" \
   "Static page must release fixed floats on narrow screens."
+require_contains "style.less" "overflow-x: auto;" \
+  "Long code samples must contain their overflow on narrow screens."
 
 if [ "$(grep -Foc "float: none;" "$ROOT_DIR/style.less")" -ne 2 ]; then
   printf '%s\n' "Static page must release both the share control and overview columns on narrow screens." >&2
@@ -218,8 +210,6 @@ require_contains "index.html" "@borderRadius: 6px" \
   "Button demo snippet must document the checked-in border radius parameter."
 require_contains "index.html" ".border-radius(@borderRadius);" \
   "Button demo snippet must pass its border radius parameter to the helper."
-require_contains "less-1.1.3.min.js" "LESS - Leaner CSS v1.1.3" \
-  "LESS runtime provenance header is missing."
 require_contains "README.md" "scripts/check-baseline.sh" \
   "README must document the baseline check."
 require_contains "README.md" "make check" \
@@ -232,10 +222,14 @@ require_contains "README.md" "make build" \
   "README must document the build gate."
 require_contains "README.md" "GitHub Actions" \
   "README must document the GitHub Actions baseline."
-require_contains "README.md" "no package manager and no build pipeline" \
-  "README must document the no-build project shape."
-require_contains "README.md" "less-1.1.3.min.js" \
-  "README must document the checked-in LESS runtime."
+require_contains "README.md" "npm ci --ignore-scripts --omit=optional" \
+  "README must document the reduced frozen dependency install."
+require_contains "README.md" "generated style.css" \
+  "README must document the generated deployment stylesheet."
+require_contains "README.md" "executes no project JavaScript" \
+  "README must document the removed browser runtime boundary."
+require_contains "README.md" "2026-06-14-static-css-build-migration.md" \
+  "README must reference the static CSS build migration plan."
 require_contains "README.md" "CHANGES.md" \
   "README must point to CHANGES.md."
 require_contains "README.md" "no automatic third-party script requests" \
@@ -263,6 +257,12 @@ require_contains "Makefile" 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST)
   "Makefile must resolve repository-root commands from its own location."
 require_contains "Makefile" '$(ROOT)scripts/check-baseline.sh' \
   "Makefile must run the static baseline check."
+require_contains "Makefile" 'npm run lint:less' \
+  "Makefile must run the modern LESS syntax gate."
+require_contains "Makefile" 'npm run check:generated' \
+  "Makefile must reject stale generated CSS."
+require_contains "Makefile" 'npm run build' \
+  "Makefile must expose the reproducible CSS build."
 require_contains "Makefile" "lint:" \
   "Makefile must expose a lint gate."
 require_contains "Makefile" "test:" \
@@ -295,6 +295,15 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --omit=optional
 
       - name: Run baseline
         run: make check
