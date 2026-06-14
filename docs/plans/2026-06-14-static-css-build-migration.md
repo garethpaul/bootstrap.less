@@ -1,11 +1,13 @@
 ---
 title: Static CSS Build Migration
 type: security
-status: planned
+status: completed
 date: 2026-06-14
 ---
 
 # Static CSS Build Migration
+
+## Status: Completed
 
 ## Problem Frame
 
@@ -25,8 +27,9 @@ modernized before they become build errors.
    hosted builds.
 3. Update deprecated mixin invocation syntax without changing generated CSS
    behavior.
-4. Enforce generated-output freshness, script absence, and a script-free
-   Content Security Policy through the dependency-free baseline.
+4. Enforce script absence and a script-free Content Security Policy through the
+   dependency-free baseline, and generated-output freshness through the pinned
+   compiler gate.
 5. Validate the built page in a real browser and retain accessibility,
    responsive layout, privacy, and user-triggered sharing behavior.
 
@@ -112,20 +115,35 @@ Approach:
 - Document the build source of truth, deployment artifact, and removed runtime
   trust boundary.
 
-## Verification
+## Work Completed
 
-- Install exactly from `package-lock.json` with lifecycle scripts disabled.
-- Run focused source and generated-output checks, then the full `make check`
-  and `make verify` gates.
-- Parse HTML, JSON, and workflow YAML with structured parsers.
-- Serve the static directory through a bounded local server and verify in
-  headless Chrome that CSS loads, no script executes, no CSP violation occurs,
-  skip navigation works, and no third-party request is automatic.
-- Reject hostile mutations covering dependency pins, build command, generated
-  drift, deprecated mixin syntax, stylesheet/runtime markup, CSP, CI install,
-  documentation, and completed plan evidence.
-- Audit exact diff, generated artifacts, whitespace, conflict markers, and
-  credential-shaped additions before committing implementation files.
+- Replaced the browser LESS 1.1.3 runtime with committed generated `style.css`
+  and removed all project script markup.
+- Pinned LESS 4.6.6 and its exact dependency graph, modernized deprecated mixin
+  calls, and added warning-free build and generated-output gates.
+- Added a script-free Content Security Policy and updated CI to use pinned Node
+  setup plus a frozen install with lifecycle scripts disabled.
+- Contained long code samples so a 375px viewport no longer develops horizontal
+  document overflow.
+
+## Verification Results
+
+- `npm ci --ignore-scripts --omit=optional` installed five audited packages from
+  the exact lockfile; `npm audit --audit-level=moderate --omit=optional`
+  reported zero vulnerabilities and `npm outdated` reported no updates.
+- `make check` and `make verify` passed the dependency-free baseline, warning-free
+  LESS lint, generated-output comparison, and reproducible CSS build.
+- Standard-library HTML, JSON, and workflow YAML parsing passed, as did shell
+  syntax, whitespace, conflict-marker, and changed-line credential audits.
+- A bounded local server and headless Chrome 80 desktop/mobile smoke confirmed
+  one generated stylesheet, zero scripts, no CSP/console/page errors, no
+  automatic third-party requests, working skip-link focus, and exact 375px
+  document width with code overflow contained locally. A separate direct
+  `file://` load also applied the generated stylesheet without console errors.
+- The gates rejected 15 hostile mutations covering dependency pins, build and
+  generated-output commands, CI install/action pinning, script/runtime markup,
+  CSP, deprecated mixin calls, mobile overflow, stale CSS, documentation, and
+  completed plan evidence.
 
 ## Residual Risks
 

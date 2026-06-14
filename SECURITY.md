@@ -2,7 +2,11 @@
 
 ## Supported Versions
 
-The supported security scope for `bootstrap.less` is the current default branch, `master`. Older commits, tags, branches, forks, demos, and generated artifacts are not actively supported unless the repository explicitly marks them as maintained.
+The supported security scope for `bootstrap.less` is the current default branch,
+`master`, including generated `style.css` when it matches the checked-in LESS
+sources. Older commits, tags, branches, forks, and other generated artifacts are
+not actively supported unless the repository explicitly marks them as
+maintained.
 
 Project summary: Boostrap for Less
 
@@ -29,7 +33,13 @@ Helpful reports include:
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
-- Review found shell execution, subprocess, or dynamic evaluation surfaces; changes in those areas should receive security-focused review before merge.
+- Build-time LESS compilation is the only maintained code-generation surface;
+  the deployed page executes no project JavaScript.
+- The script-free Content Security Policy permits only same-origin styles and
+  images while denying scripts and all unspecified resource types.
+- The exact LESS 4.6.6 dependency graph is locked and CI installs it with
+  lifecycle scripts disabled and unused optional compiler features omitted
+  before verifying generated CSS freshness.
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
 - GitHub Actions runs the static `make check` baseline with a commit-pinned
@@ -45,11 +55,9 @@ Dependency updates should come from trusted package managers and should keep loc
 
 ## Safe Research Guidelines
 
-CodeQL default-setup results cover GitHub Actions. The checked-in browser
-JavaScript is not covered by the successful default-setup job; triage that gap
-without replacing the exact static source contracts or modernizing the
-historical LESS runtime inside an unrelated security fix.
-The page keeps a Subresource Integrity binding for the reviewed LESS runtime bytes; runtime changes must update the reviewed file digest and HTML integrity value together after focused browser verification.
+CodeQL default-setup results cover GitHub Actions. The deployed page has no
+project JavaScript analysis surface; preserve that boundary and the exact
+static source, generated-output, dependency, and CSP contracts.
 
 Good-faith research is welcome when it stays within these boundaries:
 

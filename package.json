@@ -1,0 +1,17 @@
+{
+  "name": "bootstrap-less-reference",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static Bootstrap.less reference demo",
+  "scripts": {
+    "build": "lessc --no-color style.less style.css",
+    "check:generated": "lessc --no-color style.less | cmp - style.css",
+    "lint:less": "lessc --lint --no-color style.less"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "less": "4.6.6"
+  }
+}
