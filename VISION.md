@@ -53,6 +53,7 @@ Contribution rules:
 - Keep `.github/workflows/check.yml` aligned with the frozen dependency install
   and generated-output gate.
 - Keep build commands bound to the repository-local locked LESS compiler.
+- Keep Make verification rooted to the loaded repository Makefile.
 - Do not replace the project with modern Bootstrap assets.
 - Preserve attribution comments and historical context.
 

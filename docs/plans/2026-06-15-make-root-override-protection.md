@@ -1,6 +1,6 @@
 # Make Root Override Protection
 
-## Status: Planned
+## Status: Completed
 
 ## Context
 
@@ -44,6 +44,17 @@ reviewed repository files regardless of caller-supplied variables.
 - hostile protected-root, documentation, and completed-plan mutations
 - generated CSS equality, package lock, artifact, credential-pattern, and
   exact-diff audits
+
+## Verification Results
+
+- Focused shell and baseline validation passed.
+- The repository and external-directory `make check` passed with the pinned
+  local LESS compiler and exact generated CSS comparison.
+- A hostile `ROOT=/tmp` dry run retained repository checker and npm paths.
+- Three hostile Make root mutations were rejected across protected assignment,
+  maintained documentation, and completed-plan evidence.
+- Package lock, generated CSS, artifact, credential-pattern, conflict-marker,
+  and exact-diff audits passed.
 
 ## Remaining Risks
 

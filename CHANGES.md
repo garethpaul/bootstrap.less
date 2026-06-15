@@ -1,5 +1,8 @@
 # Changes
 
+- Protected the repository-derived Make root from command-line overrides so
+  public gates cannot be redirected outside the checkout.
+
 ## 2026-06-14
 
 - Replaced browser-side LESS 1.1.3 execution with committed generated CSS and a

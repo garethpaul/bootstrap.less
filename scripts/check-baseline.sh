@@ -15,6 +15,7 @@ CODEQL_PLAN="docs/plans/2026-06-12-codeql-baseline.md"
 LESS_ONE_TIME_PLAN="docs/plans/2026-06-13-static-less-one-time-compilation.md"
 LESS_RUNTIME_INTEGRITY_PLAN="docs/plans/2026-06-13-static-less-runtime-integrity.md"
 STATIC_CSS_BUILD_PLAN="docs/plans/2026-06-14-static-css-build-migration.md"
+MAKE_ROOT_PROTECTION_PLAN="docs/plans/2026-06-15-make-root-override-protection.md"
 EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
 trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
@@ -55,6 +56,7 @@ for path in \
   "$LESS_ONE_TIME_PLAN" \
   "$LESS_RUNTIME_INTEGRITY_PLAN" \
   "$STATIC_CSS_BUILD_PLAN" \
+  "$MAKE_ROOT_PROTECTION_PLAN" \
   ".github/workflows/check.yml" \
   ".gitignore" \
   "SECURITY.md" \
@@ -268,6 +270,14 @@ require_contains "VISION.md" 'repository-local locked LESS compiler' \
   "Vision guidance must preserve repository-local compiler resolution."
 require_contains "CHANGES.md" 'instead of using an ambient executable' \
   "Change history must record the local compiler correction."
+require_contains "README.md" "cannot be redirected with a caller-supplied ROOT value" \
+  "README must document Make root override protection."
+require_contains "SECURITY.md" "Make root is protected from command-line overrides" \
+  "Security guidance must document Make root override protection."
+require_contains "VISION.md" "Keep Make verification rooted to the loaded repository Makefile" \
+  "Vision guidance must preserve Make root override protection."
+require_contains "CHANGES.md" "Protected the repository-derived Make root from command-line overrides" \
+  "Change history must record Make root override protection."
 require_contains "docs/plans/2026-06-14-local-less-compiler-gate.md" \
   'status: completed' \
   "Local compiler gate plan must record completed status."
@@ -275,8 +285,18 @@ require_contains "docs/plans/2026-06-14-local-less-compiler-gate.md" \
   'Ten isolated hostile mutations' \
   "Local compiler gate plan must record mutation verification."
 require_file "Makefile"
-require_contains "Makefile" 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' \
-  "Makefile must resolve repository-root commands from its own location."
+require_contains "Makefile" 'override ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' \
+  "Makefile must protect repository-root commands from caller overrides."
+if [ "$(grep -Ec '^(override[[:space:]]+)?ROOT[[:space:]]*[:?+]?=' "$ROOT_DIR/Makefile")" -ne 1 ]; then
+  printf '%s\n' "Makefile must define exactly one repository-derived ROOT assignment." >&2
+  exit 1
+fi
+require_contains "$MAKE_ROOT_PROTECTION_PLAN" "Status: Completed" \
+  "Make root protection plan must record completed status."
+require_contains "$MAKE_ROOT_PROTECTION_PLAN" 'repository and external-directory `make check` passed' \
+  "Make root protection plan must record root-independent validation."
+require_contains "$MAKE_ROOT_PROTECTION_PLAN" "hostile Make root mutations were rejected" \
+  "Make root protection plan must record mutation verification."
 require_contains "Makefile" '$(ROOT)scripts/check-baseline.sh' \
   "Makefile must run the static baseline check."
 require_contains "Makefile" 'npm run lint:less' \
