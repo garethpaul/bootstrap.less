@@ -24,7 +24,7 @@ Additional scan context:
   `Makefile`
 - Entry points or build surfaces: `index.html`, `style.less`, and generated
   `style.css`
-- Test-looking files: no obvious test files detected
+- Tests: `tests/build-css.test.js`
 
 ## Getting Started
 
@@ -73,17 +73,22 @@ GitHub Actions; the page itself now has no browser JavaScript analysis surface.
 
 The repository pins LESS 4.6.6 and its transitive graph in `package-lock.json`;
 the generated style.css file remains committed for direct static deployment.
-Package scripts invoke that repository-local compiler directly and fail when
-the frozen install is absent instead of falling back to an ambient `lessc`.
+Package scripts invoke that repository-local compiler through
+`scripts/build-css.js` and fail when the frozen install is absent instead of
+falling back to an ambient `lessc`. The wrapper rejects symlinked or non-regular
+inputs and outputs, restricts imports to the two checked-in LESS files, bounds
+source and generated sizes, disables executable plugins and local file-reading
+functions, and replaces `style.css` atomically.
 The Make wrapper derives its root from the loaded repository Makefile and
 cannot be redirected with a caller-supplied ROOT value.
 The install omits compiler features declared optional by LESS because this
 project compiles local files without URL fetching, image inspection, or source
 maps.
-`make lint` checks modern LESS syntax, `make test` rejects drift between the
-LESS sources and generated `style.css`, and `make build` refreshes that
-artifact. The dependency-free source check also enforces the script-free
-Content Security Policy, HTTPS page URLs, safe `target="_blank"` links, the
+`make lint` checks modern LESS syntax, `make test` runs hostile build-boundary
+tests and rejects drift between the LESS sources and generated `style.css`, and
+`make build` refreshes that artifact. The dependency-free source check also
+enforces the script-free Content Security Policy, HTTPS page URLs, safe
+`target="_blank"` links, the
 document-wide no-referrer policy, keyboard skip navigation, visible focus
 states, responsive layout, and user-triggered Twitter sharing with no automatic
 third-party script requests.
@@ -130,8 +135,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   page executes no project JavaScript and enforces a script-free CSP.
 - See `docs/plans/2026-06-14-static-css-build-migration.md` for the generated CSS
   build and runtime-removal contract.
-- Static viewing uses one-time production-mode LESS compilation instead of the
-  development watch loop, avoiding lifetime polling after the initial render.
+- Static viewing uses committed precompiled CSS and performs no browser-side
+  compilation or lifetime polling.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the static
   source baseline available without introducing a package manager, including
   when invoked outside the repository root with `make -f`.
@@ -149,10 +154,11 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
 - See `docs/plans/2026-06-10-static-twitter-intent-links.md` for the
   user-triggered share-link and third-party script removal.
-- See `docs/plans/2026-06-13-static-less-one-time-compilation.md` for the
-  production-mode client-side compilation boundary.
-- See `docs/plans/2026-06-13-static-less-runtime-integrity.md` for the vendored
-  LESS runtime Subresource Integrity boundary.
+- See `docs/plans/2026-06-13-static-less-one-time-compilation.md` and
+  `docs/plans/2026-06-13-static-less-runtime-integrity.md` for the historical
+  browser-runtime steps superseded by the static CSS migration.
+- See `docs/plans/2026-06-19-build-boundary-deep-review.md` for the compiler and
+  generated-output hardening review.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

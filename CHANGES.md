@@ -1,5 +1,17 @@
 # Changes
 
+## 2026-06-19
+
+- Routed LESS lint, generated-output checks, and builds through a repository-
+  bound compiler wrapper.
+- Rejected symlinked, non-regular, oversized, or extra LESS inputs and bounded
+  generated CSS before atomically replacing `style.css`; blocked executable
+  plugins and local file-reading compiler functions.
+- Added hostile tests for compiler resolution, import escape, output symlinks,
+  stale CSS, compilation failure, size limits, and exact CSS fidelity.
+- Updated the read-only checkout action to the current commit-pinned v7.0.0
+  release while retaining disabled credential persistence.
+
 - Protected the repository-derived Make root from command-line overrides so
   public gates cannot be redirected outside the checkout.
 

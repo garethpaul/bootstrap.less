@@ -4,9 +4,10 @@
   "private": true,
   "description": "Static Bootstrap.less reference demo",
   "scripts": {
-    "build": "node ./node_modules/less/bin/lessc --no-color style.less style.css",
-    "check:generated": "node ./node_modules/less/bin/lessc --no-color style.less | cmp - style.css",
-    "lint:less": "node ./node_modules/less/bin/lessc --lint --no-color style.less"
+    "build": "node scripts/build-css.js build",
+    "check:generated": "node scripts/build-css.js check",
+    "lint:less": "node scripts/build-css.js lint",
+    "test:build": "node --test tests/build-css.test.js"
   },
   "engines": {
     "node": ">=20.19"

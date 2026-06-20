@@ -29,11 +29,14 @@
   without deprecation warnings.
 - Package scripts must resolve LESS through `node_modules`; never fall back to
   an ambient or global `lessc` executable.
+- Route compilation through `scripts/build-css.js` so inputs and outputs remain
+  bounded, non-symlinked, and atomically generated.
 - Keep generated `style.css` byte-for-byte synchronized with the LESS sources.
 
 ## Testing guidance
 
-- No dedicated test files were detected; treat `make check` as the minimum baseline.
+- `tests/build-css.test.js` covers compiler resolution, import boundaries,
+  symlink rejection, size limits, atomic output, and generated CSS fidelity.
 - Start with the narrowest relevant test or Make target, then run `make check` before handing off if the change is not documentation-only.
 - Keep README verification notes in sync when commands, fixtures, or supported toolchains change.
 

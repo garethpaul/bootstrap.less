@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 INDEX="$ROOT_DIR/index.html"
 MAKE_GATE_PLAN="docs/plans/2026-06-09-static-make-gate-targets.md"
 MAILTO_ENCODING_PLAN="docs/plans/2026-06-09-static-mailto-query-encoding.md"
@@ -63,9 +63,11 @@ for path in \
   "index.html" \
   "package.json" \
   "package-lock.json" \
+  "scripts/build-css.js" \
   "style.css" \
   "style.less" \
-  "bootstrap.less"; do
+  "bootstrap.less" \
+  "tests/build-css.test.js"; do
   require_file "$path"
 done
 
@@ -130,9 +132,10 @@ fi
 
 for package_contract in \
   '"private": true' \
-  '"build": "node ./node_modules/less/bin/lessc --no-color style.less style.css"' \
-  '"check:generated": "node ./node_modules/less/bin/lessc --no-color style.less | cmp - style.css"' \
-  '"lint:less": "node ./node_modules/less/bin/lessc --lint --no-color style.less"' \
+  '"build": "node scripts/build-css.js build"' \
+  '"check:generated": "node scripts/build-css.js check"' \
+  '"lint:less": "node scripts/build-css.js lint"' \
+  '"test:build": "node --test tests/build-css.test.js"' \
   '"node": ">=20.19"' \
   '"less": "4.6.6"'; do
   require_contains "package.json" "$package_contract" \
@@ -232,7 +235,7 @@ require_contains "README.md" "GitHub Actions" \
   "README must document the GitHub Actions baseline."
 require_contains "README.md" "npm ci --ignore-scripts --omit=optional" \
   "README must document the reduced frozen dependency install."
-require_contains "README.md" 'repository-local compiler directly' \
+require_contains "README.md" 'repository-local compiler through' \
   "README must document repository-local LESS compiler resolution."
 require_contains "README.md" "generated style.css" \
   "README must document the generated deployment stylesheet."
@@ -303,6 +306,8 @@ require_contains "Makefile" 'npm run lint:less' \
   "Makefile must run the modern LESS syntax gate."
 require_contains "Makefile" 'npm run check:generated' \
   "Makefile must reject stale generated CSS."
+require_contains "Makefile" 'npm run test:build' \
+  "Makefile must run hostile build-boundary tests."
 require_contains "Makefile" 'npm run build' \
   "Makefile must expose the reproducible CSS build."
 require_contains "Makefile" "lint:" \
@@ -334,7 +339,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 

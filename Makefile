@@ -8,6 +8,7 @@ lint:
 
 test:
 	$(ROOT)scripts/check-baseline.sh
+	cd $(ROOT) && npm run test:build
 	cd $(ROOT) && npm run check:generated
 	@echo "Browser interaction remains covered by the documented bounded smoke test."
 
