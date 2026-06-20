@@ -2,7 +2,11 @@
 
 ## Supported Versions
 
-The supported security scope for `bootstrap.less` is the current default branch, `master`. Older commits, tags, branches, forks, demos, and generated artifacts are not actively supported unless the repository explicitly marks them as maintained.
+The supported security scope for `bootstrap.less` is the current default branch,
+`master`, including generated `style.css` when it matches the checked-in LESS
+sources. Older commits, tags, branches, forks, and other generated artifacts are
+not actively supported unless the repository explicitly marks them as
+maintained.
 
 Project summary: Boostrap for Less
 
@@ -29,7 +33,21 @@ Helpful reports include:
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
-- Review found shell execution, subprocess, or dynamic evaluation surfaces; changes in those areas should receive security-focused review before merge.
+- Build-time LESS compilation is the only maintained code-generation surface;
+  the deployed page executes no project JavaScript.
+- The script-free Content Security Policy permits only same-origin styles and
+  images while denying scripts and all unspecified resource types.
+- The exact LESS 4.6.6 dependency graph is locked and CI installs it with
+  lifecycle scripts disabled and unused optional compiler features omitted
+  before verifying generated CSS freshness.
+- Build commands resolve the repository-local locked compiler directly and do
+  not trust an ambient `lessc` executable from the workstation `PATH`.
+- The compiler wrapper rejects symlinked, non-regular, oversized, and
+  unapproved LESS inputs, executable plugins, and local file-reading functions;
+  it bounds generated CSS and atomically replaces only the repository
+  `style.css` file.
+- The Make root is protected from command-line overrides so verification cannot
+  be redirected to an unreviewed checker or compiler working directory.
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
 - GitHub Actions runs the static `make check` baseline with a commit-pinned
@@ -44,6 +62,10 @@ For web services, APIs, sockets, or scraping workflows, prioritize reports invol
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
 
 ## Safe Research Guidelines
+
+CodeQL default-setup results cover GitHub Actions. The deployed page has no
+project JavaScript analysis surface; preserve that boundary and the exact
+static source, generated-output, dependency, and CSP contracts.
 
 Good-faith research is welcome when it stays within these boundaries:
 

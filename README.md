@@ -7,7 +7,7 @@
 
 `garethpaul/bootstrap.less` is a static web project. Boostrap for Less
 
-This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: JavaScript (1), shell (1).
+This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The maintained source is LESS, generated CSS, HTML, POSIX shell, Make, and GitHub Actions YAML.
 
 ## Repository Contents
 
@@ -20,34 +20,44 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 Additional scan context:
 
 - Source directories: docs, scripts
-- Dependency and build manifests: none detected
-- Entry points or build surfaces: none detected
-- Test-looking files: no obvious test files detected
+- Dependency and build manifests: `package.json`, `package-lock.json`, and
+  `Makefile`
+- Entry points or build surfaces: `index.html`, `style.less`, and generated
+  `style.css`
+- Tests: `tests/build-css.test.js`
 
 ## Getting Started
 
 ### Prerequisites
 
 - Git
+- Node.js 20.19 or newer
+- npm 10 or newer
 
 ### Setup
 
 ```bash
 git clone https://github.com/garethpaul/bootstrap.less.git
 cd bootstrap.less
+npm ci --ignore-scripts --omit=optional
 ```
 
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
 
 ## Running or Using the Project
 
-Open `index.html` in a browser, or serve this directory with any static file server. The demo compiles `style.less` in the browser with the checked-in `less-1.1.3.min.js` runtime.
+Open `index.html` in a browser, or serve this directory with any static file
+server. The page loads the committed generated `style.css` and executes no
+project JavaScript. Edit `style.less` or `bootstrap.less`, then run `make build`
+to refresh the deployment stylesheet.
 
 ## Testing and Verification
 
-Run the SDK-free source baseline and root wrapper gates:
+Install the exact lockfile graph without lifecycle scripts, then run the source,
+generated-output, and root wrapper gates:
 
 ```sh
+npm ci --ignore-scripts --omit=optional
 make lint
 make test
 make build
@@ -56,11 +66,33 @@ scripts/check-baseline.sh
 ```
 
 GitHub Actions runs `make check` through `.github/workflows/check.yml` on
-pushes, pull requests, and manual dispatches. The workflow uses a
-commit-pinned checkout action, read-only repository access, and a bounded
-runtime.
+pushes, pull requests, and manual dispatches. The workflow uses commit-pinned
+checkout and Node setup actions, a frozen script-disabled install, read-only
+repository access, and a bounded runtime. GitHub CodeQL default setup analyzes
+GitHub Actions; the page itself now has no browser JavaScript analysis surface.
 
-This repository has no package manager and no build pipeline. The root `make build` target preserves the static preflight and reports that `index.html` is the runnable artifact. The source check verifies the local LESS runtime, the `style.less` import of `bootstrap.less`, HTTPS page URLs, safe `target="_blank"` links, the document-wide no-referrer policy, keyboard skip navigation to a main landmark, visible link focus states, and user-triggered Twitter sharing with no automatic third-party script requests.
+The repository pins LESS 4.6.6 and its transitive graph in `package-lock.json`;
+the generated style.css file remains committed for direct static deployment.
+Package scripts invoke that repository-local compiler through
+`scripts/build-css.js` and fail when the frozen install is absent instead of
+falling back to an ambient `lessc`. The wrapper rejects symlinked or non-regular
+inputs and outputs, restricts imports to the two checked-in LESS files, bounds
+source and generated sizes, disables executable plugins and local file-reading
+functions, and replaces `style.css` atomically.
+The Make wrapper derives its root from the loaded repository Makefile and
+cannot be redirected with a caller-supplied ROOT value.
+The install omits compiler features declared optional by LESS because this
+project compiles local files without URL fetching, image inspection, or source
+maps.
+`make lint` checks modern LESS syntax, `make test` runs hostile build-boundary
+tests and rejects drift between the LESS sources and generated `style.css`, and
+`make build` refreshes that artifact. The dependency-free source check also
+enforces the script-free Content Security Policy, HTTPS page URLs, safe
+`target="_blank"` links, the
+document-wide no-referrer policy, keyboard skip navigation, visible focus
+states, responsive layout, and user-triggered Twitter sharing with no automatic
+third-party script requests.
+Loading the page makes no automatic third-party script requests.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -71,9 +103,12 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Security and Privacy Notes
 
 - Review changes touching external API calls or credential-adjacent configuration; examples from the scan include index.html.
-- Review changes touching network requests, sockets, or service endpoints; examples from the scan include bootstrap.less, index.html, less-1.1.3.min.js.
-- Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include bootstrap.less, index.html, less-1.1.3.min.js.
-- Review changes touching shell execution, subprocess, or dynamic evaluation; examples from the scan include less-1.1.3.min.js.
+- Review changes touching network requests or external endpoints in
+  `index.html`.
+- Review dependency and build changes in `package.json`, `package-lock.json`,
+  `Makefile`, and `.github/workflows/check.yml` together.
+- Keep generated `style.css` synchronized with `style.less` and
+  `bootstrap.less`; do not hand-edit the generated artifact.
 - Review changes touching database, model, or persistence code; examples from the scan include bootstrap.less.
 
 ## Maintenance Notes
@@ -81,20 +116,27 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The opacity mixin uses its declared parameter for all generated opacity rules.
 - Twitter sharing uses self-contained Web Intent links, so loading the page does
   not contact the Twitter widgets runtime.
-- The page sets a document-wide no-referrer policy before loading styles,
-  scripts, or outbound links.
+- The page sets a document-wide no-referrer policy before loading styles or
+  outbound links.
 - The page includes a mobile viewport meta tag so static local viewing starts
   from the device width instead of a desktop layout default.
 - Twitter share links also use a no-referrer policy, isolated new tabs, encoded
   query parameters, and descriptive link text before handing off to the
   external share endpoint.
 - The page bounds its historical 640px layout and stacks the overview grid on
-  narrow screens so headings, links, and columns remain visible.
+  narrow screens so headings, links, and columns remain visible. Long code
+  samples scroll within their own block instead of widening the page.
 - Mailto query strings stay URL-encoded so static links remain valid.
 - The visible button snippet uses its declared border radius parameter, matching
   the checked-in `.button()` mixin.
 - The long reference page starts with a keyboard-accessible skip link targeting
   its single focusable `main` landmark, and links keep a visible focus outline.
+- LESS 4.6.6 compiles the maintained sources into committed `style.css`; the
+  page executes no project JavaScript and enforces a script-free CSP.
+- See `docs/plans/2026-06-14-static-css-build-migration.md` for the generated CSS
+  build and runtime-removal contract.
+- Static viewing uses committed precompiled CSS and performs no browser-side
+  compilation or lifetime polling.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the static
   source baseline available without introducing a package manager, including
   when invoked outside the repository root with `make -f`.
@@ -112,6 +154,11 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions baseline.
 - See `docs/plans/2026-06-10-static-twitter-intent-links.md` for the
   user-triggered share-link and third-party script removal.
+- See `docs/plans/2026-06-13-static-less-one-time-compilation.md` and
+  `docs/plans/2026-06-13-static-less-runtime-integrity.md` for the historical
+  browser-runtime steps superseded by the static CSS migration.
+- See `docs/plans/2026-06-19-build-boundary-deep-review.md` for the compiler and
+  generated-output hardening review.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

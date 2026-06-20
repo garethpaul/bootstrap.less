@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 INDEX="$ROOT_DIR/index.html"
 MAKE_GATE_PLAN="docs/plans/2026-06-09-static-make-gate-targets.md"
 MAILTO_ENCODING_PLAN="docs/plans/2026-06-09-static-mailto-query-encoding.md"
@@ -11,6 +11,13 @@ VIEWPORT_PLAN="docs/plans/2026-06-09-static-viewport-meta-baseline.md"
 CI_PLAN="docs/plans/2026-06-10-ci-baseline.md"
 TWITTER_INTENT_PLAN="docs/plans/2026-06-10-static-twitter-intent-links.md"
 KEYBOARD_FOCUS_PLAN="docs/plans/2026-06-12-static-main-landmark-keyboard-focus.md"
+CODEQL_PLAN="docs/plans/2026-06-12-codeql-baseline.md"
+LESS_ONE_TIME_PLAN="docs/plans/2026-06-13-static-less-one-time-compilation.md"
+LESS_RUNTIME_INTEGRITY_PLAN="docs/plans/2026-06-13-static-less-runtime-integrity.md"
+STATIC_CSS_BUILD_PLAN="docs/plans/2026-06-14-static-css-build-migration.md"
+MAKE_ROOT_PROTECTION_PLAN="docs/plans/2026-06-15-make-root-override-protection.md"
+EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
+trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
 require_file() {
   path=$1
@@ -45,11 +52,22 @@ for path in \
   "$CI_PLAN" \
   "$TWITTER_INTENT_PLAN" \
   "$KEYBOARD_FOCUS_PLAN" \
+  "$CODEQL_PLAN" \
+  "$LESS_ONE_TIME_PLAN" \
+  "$LESS_RUNTIME_INTEGRITY_PLAN" \
+  "$STATIC_CSS_BUILD_PLAN" \
+  "$MAKE_ROOT_PROTECTION_PLAN" \
   ".github/workflows/check.yml" \
+  ".gitignore" \
+  "SECURITY.md" \
   "index.html" \
+  "package.json" \
+  "package-lock.json" \
+  "scripts/build-css.js" \
+  "style.css" \
   "style.less" \
   "bootstrap.less" \
-  "less-1.1.3.min.js"; do
+  "tests/build-css.test.js"; do
   require_file "$path"
 done
 
@@ -57,12 +75,12 @@ require_contains "index.html" "<title>Bootstrap.less</title>" \
   "index.html must contain a valid title tag."
 require_contains "index.html" '<meta name="viewport" content="width=device-width, initial-scale=1">' \
   "index.html must include a mobile viewport baseline."
-require_contains "index.html" 'href="style.less"' \
-  "index.html must load the demo LESS file."
-require_contains "index.html" 'src="less-1.1.3.min.js"' \
-  "index.html must load the checked-in LESS runtime."
+require_contains "index.html" '<link rel="stylesheet" type="text/css" media="all" href="style.css">' \
+  "index.html must load the generated CSS artifact."
 require_contains "index.html" '<meta name="referrer" content="no-referrer">' \
   "index.html must set a document-wide no-referrer policy."
+require_contains "index.html" '<meta http-equiv="Content-Security-Policy" content="default-src '\''none'\''; style-src '\''self'\''; img-src '\''self'\''; base-uri '\''none'\''; form-action '\''none'\''">' \
+  "index.html must enforce the approved script-free Content Security Policy."
 require_contains "index.html" '<a class="skip-link" href="#main-content">Skip to main content</a>' \
   "index.html must offer a skip link to the main reference content."
 require_contains "index.html" '<main id="main-content" tabindex="-1">' \
@@ -77,8 +95,85 @@ require_contains "style.less" "top: -100px;" \
   "The skip link must remain outside the normal visual flow until focused."
 require_contains "style.less" "outline: 3px solid rgba(255,255,255,.9);" \
   "Static page links must retain a high-contrast focus outline."
-require_contains "index.html" "less.watch();" \
-  "index.html must preserve the browser LESS watch behavior."
+
+skip_focus_rule=$(awk '/^a\.skip-link:focus \{$/,/^}$/' "$ROOT_DIR/style.less")
+expected_skip_focus_rule='a.skip-link:focus {
+  top: 20px;
+  color: darken(@purple, 20);
+  text-decoration: none;
+}'
+if [ "$skip_focus_rule" != "$expected_skip_focus_rule" ]; then
+  printf '%s\n' "The focused skip link must use the approved visible-position rule." >&2
+  exit 1
+fi
+if grep -Eiq '<script([[:space:]>])|javascript:' "$INDEX"; then
+  printf '%s\n' "The static page must not execute project JavaScript." >&2
+  exit 1
+fi
+
+if [ -e "$ROOT_DIR/less-1.1.3.min.js" ] || \
+   grep -Eiq 'less-1\.1\.3|min\.js|stylesheet/less|window\.less|less\.watch' "$INDEX"; then
+  printf '%s\n' "The legacy browser LESS runtime and runtime markup must remain removed." >&2
+  exit 1
+fi
+
+if [ "$(grep -Foc 'href="style.css"' "$INDEX")" -ne 1 ] || \
+   [ "$(grep -Ec '<link[[:space:]][^>]*rel="stylesheet"' "$INDEX")" -ne 1 ]; then
+  printf '%s\n' "The page must load exactly one generated stylesheet." >&2
+  exit 1
+fi
+
+if grep -Eh '#(flexbox|reset)[[:space:]]*>[[:space:]]*\.[[:alnum:]_-]+[[:space:]]*;' \
+    "$ROOT_DIR/style.less" "$ROOT_DIR/bootstrap.less" | \
+    grep -Ev '^[[:space:]]*//' >/dev/null; then
+  printf '%s\n' "LESS namespace mixin calls must use explicit parentheses." >&2
+  exit 1
+fi
+
+for package_contract in \
+  '"private": true' \
+  '"build": "node scripts/build-css.js build"' \
+  '"check:generated": "node scripts/build-css.js check"' \
+  '"lint:less": "node scripts/build-css.js lint"' \
+  '"test:build": "node --test tests/build-css.test.js"' \
+  '"node": ">=20.19"' \
+  '"less": "4.6.6"'; do
+  require_contains "package.json" "$package_contract" \
+    "package.json must preserve build contract: $package_contract"
+done
+
+if grep -Eq '"(build|check:generated|lint:less)": "lessc([[:space:]]|$)' \
+    "$ROOT_DIR/package.json"; then
+  printf '%s\n' "Package scripts must not resolve LESS from the ambient PATH." >&2
+  exit 1
+fi
+
+require_contains "package-lock.json" '"lockfileVersion": 3' \
+  "package-lock.json must use the current deterministic lockfile format."
+require_contains "package-lock.json" '"node_modules/less"' \
+  "package-lock.json must resolve the pinned LESS compiler."
+require_contains ".gitignore" "node_modules/" \
+  "Dependency installation artifacts must remain ignored."
+require_contains "style.css" "a.skip-link:focus" \
+  "Generated CSS must retain skip-link focus behavior."
+require_contains "style.css" "@media (max-width: 700px)" \
+  "Generated CSS must retain narrow-screen behavior."
+
+for static_css_plan_contract in \
+  "status: completed" \
+  "## Status: Completed" \
+  "make check" \
+  "15 hostile mutations" \
+  "headless Chrome" \
+  "375px"; do
+  require_contains "$STATIC_CSS_BUILD_PLAN" "$static_css_plan_contract" \
+    "Static CSS build plan must record completed verification: $static_css_plan_contract"
+done
+
+for script_free_doc in "AGENTS.md" "README.md" "SECURITY.md" "VISION.md" "CHANGES.md"; do
+  require_contains "$script_free_doc" "script-free" \
+    "$script_free_doc must document the script-free deployment boundary."
+done
 
 if [ "$(grep -Foc '<a class="skip-link" href="#main-content">' "$INDEX")" -ne 1 ] || \
    [ "$(grep -Foc '<main id="main-content" tabindex="-1">' "$INDEX")" -ne 1 ] || \
@@ -111,6 +206,8 @@ require_contains "style.less" "div.span5" \
   "Static page must stack the two-column overview on narrow screens."
 require_contains "style.less" "float: none;" \
   "Static page must release fixed floats on narrow screens."
+require_contains "style.less" "overflow-x: auto;" \
+  "Long code samples must contain their overflow on narrow screens."
 
 if [ "$(grep -Foc "float: none;" "$ROOT_DIR/style.less")" -ne 2 ]; then
   printf '%s\n' "Static page must release both the share control and overview columns on narrow screens." >&2
@@ -124,8 +221,6 @@ require_contains "index.html" "@borderRadius: 6px" \
   "Button demo snippet must document the checked-in border radius parameter."
 require_contains "index.html" ".border-radius(@borderRadius);" \
   "Button demo snippet must pass its border radius parameter to the helper."
-require_contains "less-1.1.3.min.js" "LESS - Leaner CSS v1.1.3" \
-  "LESS runtime provenance header is missing."
 require_contains "README.md" "scripts/check-baseline.sh" \
   "README must document the baseline check."
 require_contains "README.md" "make check" \
@@ -138,10 +233,16 @@ require_contains "README.md" "make build" \
   "README must document the build gate."
 require_contains "README.md" "GitHub Actions" \
   "README must document the GitHub Actions baseline."
-require_contains "README.md" "no package manager and no build pipeline" \
-  "README must document the no-build project shape."
-require_contains "README.md" "less-1.1.3.min.js" \
-  "README must document the checked-in LESS runtime."
+require_contains "README.md" "npm ci --ignore-scripts --omit=optional" \
+  "README must document the reduced frozen dependency install."
+require_contains "README.md" 'repository-local compiler through' \
+  "README must document repository-local LESS compiler resolution."
+require_contains "README.md" "generated style.css" \
+  "README must document the generated deployment stylesheet."
+require_contains "README.md" "executes no project JavaScript" \
+  "README must document the removed browser runtime boundary."
+require_contains "README.md" "2026-06-14-static-css-build-migration.md" \
+  "README must reference the static CSS build migration plan."
 require_contains "README.md" "CHANGES.md" \
   "README must point to CHANGES.md."
 require_contains "README.md" "no automatic third-party script requests" \
@@ -164,11 +265,51 @@ require_contains "README.md" "keyboard-accessible skip link" \
   "README must document keyboard skip navigation."
 require_contains "README.md" "visible focus outline" \
   "README must document the visible keyboard focus baseline."
+require_contains "AGENTS.md" 'never fall back to' \
+  "Agent guidance must reject ambient LESS compiler fallback."
+require_contains "SECURITY.md" 'not trust an ambient `lessc`' \
+  "Security guidance must document the ambient compiler boundary."
+require_contains "VISION.md" 'repository-local locked LESS compiler' \
+  "Vision guidance must preserve repository-local compiler resolution."
+require_contains "CHANGES.md" 'instead of using an ambient executable' \
+  "Change history must record the local compiler correction."
+require_contains "README.md" "cannot be redirected with a caller-supplied ROOT value" \
+  "README must document Make root override protection."
+require_contains "SECURITY.md" "Make root is protected from command-line overrides" \
+  "Security guidance must document Make root override protection."
+require_contains "VISION.md" "Keep Make verification rooted to the loaded repository Makefile" \
+  "Vision guidance must preserve Make root override protection."
+require_contains "CHANGES.md" "Protected the repository-derived Make root from command-line overrides" \
+  "Change history must record Make root override protection."
+require_contains "docs/plans/2026-06-14-local-less-compiler-gate.md" \
+  'status: completed' \
+  "Local compiler gate plan must record completed status."
+require_contains "docs/plans/2026-06-14-local-less-compiler-gate.md" \
+  'Ten isolated hostile mutations' \
+  "Local compiler gate plan must record mutation verification."
 require_file "Makefile"
-require_contains "Makefile" 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' \
-  "Makefile must resolve repository-root commands from its own location."
+require_contains "Makefile" 'override ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' \
+  "Makefile must protect repository-root commands from caller overrides."
+if [ "$(grep -Ec '^(override[[:space:]]+)?ROOT[[:space:]]*[:?+]?=' "$ROOT_DIR/Makefile")" -ne 1 ]; then
+  printf '%s\n' "Makefile must define exactly one repository-derived ROOT assignment." >&2
+  exit 1
+fi
+require_contains "$MAKE_ROOT_PROTECTION_PLAN" "Status: Completed" \
+  "Make root protection plan must record completed status."
+require_contains "$MAKE_ROOT_PROTECTION_PLAN" 'repository and external-directory `make check` passed' \
+  "Make root protection plan must record root-independent validation."
+require_contains "$MAKE_ROOT_PROTECTION_PLAN" "hostile Make root mutations were rejected" \
+  "Make root protection plan must record mutation verification."
 require_contains "Makefile" '$(ROOT)scripts/check-baseline.sh' \
   "Makefile must run the static baseline check."
+require_contains "Makefile" 'npm run lint:less' \
+  "Makefile must run the modern LESS syntax gate."
+require_contains "Makefile" 'npm run check:generated' \
+  "Makefile must reject stale generated CSS."
+require_contains "Makefile" 'npm run test:build' \
+  "Makefile must run hostile build-boundary tests."
+require_contains "Makefile" 'npm run build' \
+  "Makefile must expose the reproducible CSS build."
 require_contains "Makefile" "lint:" \
   "Makefile must expose a lint gate."
 require_contains "Makefile" "test:" \
@@ -177,22 +318,78 @@ require_contains "Makefile" "build:" \
   "Makefile must expose a build gate."
 require_contains "Makefile" "verify: lint test build" \
   "Makefile must expose a combined verify gate."
-require_contains ".github/workflows/check.yml" "uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" \
-  "GitHub Actions check workflow must pin the reviewed checkout commit."
-require_contains ".github/workflows/check.yml" "permissions:" \
-  "GitHub Actions check workflow must declare token permissions."
-require_contains ".github/workflows/check.yml" "contents: read" \
-  "GitHub Actions check workflow must keep repository access read-only."
-require_contains ".github/workflows/check.yml" "workflow_dispatch:" \
-  "GitHub Actions check workflow must support manual verification."
-require_contains ".github/workflows/check.yml" "timeout-minutes: 5" \
-  "GitHub Actions check workflow must bound baseline execution."
-require_contains ".github/workflows/check.yml" "runs-on: ubuntu-24.04" \
-  "GitHub Actions check workflow must use a stable hosted runner image."
-require_contains ".github/workflows/check.yml" "cancel-in-progress: true" \
-  "GitHub Actions check workflow must cancel superseded runs."
-require_contains ".github/workflows/check.yml" "run: make check" \
-  "GitHub Actions check workflow must run the static make check baseline."
+cat > "$EXPECTED_WORKFLOW" <<'EOF'
+name: Check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --omit=optional
+
+      - name: Run baseline
+        run: make check
+EOF
+if find "$ROOT_DIR/.github/workflows" -type f \( -name '*codeql*.yml' -o -name '*codeql*.yaml' \) -print -quit | grep -q .; then
+  printf '%s\n' "GitHub default CodeQL setup must not be duplicated by an advanced workflow." >&2
+  exit 1
+fi
+
+workflow_paths=$(find "$ROOT_DIR/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) -print | sort)
+expected_workflow_paths="$ROOT_DIR/.github/workflows/check.yml"
+if [ "$workflow_paths" != "$expected_workflow_paths" ]; then
+  printf '%s\n' "Only the canonical Check workflow is approved." >&2
+  exit 1
+fi
+if ! cmp -s "$ROOT_DIR/.github/workflows/check.yml" "$EXPECTED_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions workflow must match the canonical credential-free baseline." >&2
+  exit 1
+fi
+require_contains "$CODEQL_PLAN" "status: completed" \
+  "CodeQL plan must record completed status."
+require_contains "$CODEQL_PLAN" "make check" \
+  "CodeQL plan must record make check verification."
+require_contains "$CODEQL_PLAN" "external working directory" \
+  "CodeQL plan must record location-independent verification."
+require_contains "$CODEQL_PLAN" "hostile mutations rejected" \
+  "CodeQL plan must record negative verification."
+require_contains "$CODEQL_PLAN" "default setup" \
+  "CodeQL plan must document the external configuration authority."
+require_contains "$CODEQL_PLAN" "browser JavaScript remains uncovered" \
+  "CodeQL plan must record the browser JavaScript analysis gap."
+require_contains "README.md" "CodeQL default setup analyzes" \
+  "README must document CodeQL coverage."
+require_contains "SECURITY.md" "CodeQL default-setup results" \
+  "SECURITY must document CodeQL triage."
+require_contains "VISION.md" "CodeQL default-setup coverage" \
+  "VISION must preserve CodeQL coverage."
+require_contains "CHANGES.md" "CodeQL default setup" \
+  "CHANGES must record CodeQL analysis."
 
 if grep -Fq "http://" "$INDEX"; then
   printf '%s\n' "index.html must not contain insecure HTTP URLs." >&2

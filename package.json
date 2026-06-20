@@ -1,0 +1,18 @@
+{
+  "name": "bootstrap-less-reference",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static Bootstrap.less reference demo",
+  "scripts": {
+    "build": "node scripts/build-css.js build",
+    "check:generated": "node scripts/build-css.js check",
+    "lint:less": "node scripts/build-css.js lint",
+    "test:build": "node --test tests/build-css.test.js"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "less": "4.6.6"
+  }
+}

@@ -1,7 +1,45 @@
 # Changes
 
+## 2026-06-19
+
+- Routed LESS lint, generated-output checks, and builds through a repository-
+  bound compiler wrapper.
+- Rejected symlinked, non-regular, oversized, or extra LESS inputs and bounded
+  generated CSS before atomically replacing `style.css`; blocked executable
+  plugins and local file-reading compiler functions.
+- Added hostile tests for compiler resolution, import escape, output symlinks,
+  stale CSS, compilation failure, size limits, and exact CSS fidelity.
+- Updated the read-only checkout action to the current commit-pinned v7.0.0
+  release while retaining disabled credential persistence.
+
+- Protected the repository-derived Make root from command-line overrides so
+  public gates cannot be redirected outside the checkout.
+
+## 2026-06-14
+
+- Replaced browser-side LESS 1.1.3 execution with committed generated CSS and a
+  restrictive script-free Content Security Policy.
+- Added a pinned LESS 4.6.6 build with a frozen lockfile, warning-free source
+  syntax, generated-output drift checks, and a script-disabled CI install that
+  omits unused optional compiler features.
+- Bound package scripts to the repository-local LESS compiler so missing
+  dependencies fail explicitly instead of using an ambient executable.
+- Contained long code-sample overflow so the generated page remains within a
+  375px mobile viewport.
+
+## 2026-06-13
+
+- Bound the checked-in LESS 1.1.3 runtime to its reviewed SHA-256 digest through
+  Subresource Integrity and an exact static source contract.
+- Configured the bundled LESS runtime for production before load and removed
+  the permanent development watch loop.
+- Preserved client-side initial stylesheet compilation without adding generated
+  CSS or a package-manager build.
+
 ## 2026-06-12
 
+- Documented GitHub CodeQL default setup for Actions, rejected a conflicting
+  advanced workflow, and recorded the browser JavaScript analysis gap.
 - Added a keyboard skip link and a single focusable main landmark around the
   long Bootstrap.less reference content.
 - Added explicit high-contrast link focus styling and an SDK-free regression

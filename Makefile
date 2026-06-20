@@ -1,17 +1,19 @@
 .PHONY: build check lint test verify
 
-ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+override ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 lint:
 	$(ROOT)scripts/check-baseline.sh
+	cd $(ROOT) && npm run lint:less
 
 test:
 	$(ROOT)scripts/check-baseline.sh
-	@echo "No automated browser test runner is configured for this static demo."
+	cd $(ROOT) && npm run test:build
+	cd $(ROOT) && npm run check:generated
+	@echo "Browser interaction remains covered by the documented bounded smoke test."
 
 build:
-	$(ROOT)scripts/check-baseline.sh
-	@echo "No build pipeline is configured; open index.html or serve the directory as static files."
+	cd $(ROOT) && npm run build
 
 verify: lint test build
 
