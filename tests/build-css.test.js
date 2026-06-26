@@ -8,9 +8,11 @@ const less = require('less');
 const {
   MAX_INPUT_BYTES,
   MAX_OUTPUT_BYTES,
+  MINIMUM_NODE_VERSION,
   buildCss,
   checkGeneratedCss,
   compileCss,
+  assertSupportedNodeVersion,
   loadPinnedLess,
 } = require('../scripts/build-css');
 
@@ -28,6 +30,16 @@ async function createFixture() {
 
   return root;
 }
+
+test('compiler CLI enforces the documented Node runtime floor', () => {
+  assert.equal(MINIMUM_NODE_VERSION, '20.19.0');
+  assert.throws(() => assertSupportedNodeVersion('18.20.8'), /Node 20\.19 or newer/);
+  assert.throws(() => assertSupportedNodeVersion('20.18.9'), /Node 20\.19 or newer/);
+  assert.throws(() => assertSupportedNodeVersion('not-a-version'), /Unable to validate/);
+  assert.doesNotThrow(() => assertSupportedNodeVersion('20.19.0'));
+  assert.throws(() => assertSupportedNodeVersion('20.19.0-rc.1'), /release is required/);
+  assert.doesNotThrow(() => assertSupportedNodeVersion('22.0.0'));
+});
 
 test('compiler output exactly matches the checked-in CSS', async () => {
   const css = await compileCss(repositoryRoot, less);

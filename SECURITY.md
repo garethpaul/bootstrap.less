@@ -42,6 +42,9 @@ Helpful reports include:
   before verifying generated CSS freshness.
 - Build commands resolve the repository-local locked compiler directly and do
   not trust an ambient `lessc` executable from the workstation `PATH`.
+- Compiler CLI commands enforce Node 20.19 or newer before loading the locked
+  LESS package, so unsupported runtimes cannot produce a misleading green gate
+  after only an npm engine warning.
 - The compiler wrapper rejects symlinked, non-regular, oversized, and
   unapproved LESS inputs, executable plugins, and local file-reading functions;
   it bounds generated CSS and atomically replaces only the repository
