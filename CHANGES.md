@@ -2,6 +2,25 @@
 
 ## 2026-06-26
 
+- **Timestamp:** 2026-06-26 13:22:39 PDT.
+- **Priority:** LESS compiler input ownership.
+- **Summary:** Bound input opening, metadata validation, size enforcement, and
+  reading to one no-follow file descriptor so a pathname swap cannot redirect
+  compilation after validation.
+- **Files:** `scripts/build-css.js`, `tests/build-css.test.js`,
+  `scripts/check-baseline.sh`, `README.md`, `SECURITY.md`, `VISION.md`,
+  `AGENTS.md`, `CHANGES.md`, and
+  `docs/plans/2026-06-26-less-input-descriptor-boundary.md`.
+- **Tests:** Added a focused descriptor ownership contract; all 20 build tests
+  and `make check` pass on Node 20.20.2, 22.16.0, and 24.17.0, plus an external
+  absolute Makefile path. Restoring the pathname reopen makes the focused
+  contract fail.
+- **Findings:** Input files were checked with `lstat` and then reopened by path,
+  leaving validation and reading on different filesystem objects during a
+  concurrent symlink swap.
+- **Blockers:** None.
+- **Next action:** Verify the exact hosted Node 20/22/24 head before merge.
+
 - Failed compiler CLI commands closed below Node 20.19 instead of allowing
   unsupported runtimes to continue after npm's engine warning.
 - Added focused version-boundary coverage for Node 18, Node 20.18, malformed
