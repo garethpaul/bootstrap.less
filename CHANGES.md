@@ -1,5 +1,15 @@
 # Changes
 
+## 2026-06-26
+
+- Failed compiler CLI commands closed below Node 20.19 instead of allowing
+  unsupported runtimes to continue after npm's engine warning.
+- Added focused version-boundary coverage for Node 18, Node 20.18, malformed
+  and prerelease versions, the Node 20.19 floor, and newer stable majors.
+- Re-audited imports, plugins, local file reads, symlink boundaries, size
+  limits, atomic output, generated CSS fidelity, dependencies, and GitHub
+  security queues; no additional correction was required.
+
 ## 2026-06-19
 
 - Routed LESS lint, generated-output checks, and builds through a repository-

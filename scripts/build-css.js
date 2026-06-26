@@ -8,7 +8,24 @@ const { TextDecoder } = require('node:util');
 const MAX_INPUT_BYTES = 1024 * 1024;
 const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
 const PINNED_LESS_VERSION = '4.6.6';
+const MINIMUM_NODE_VERSION = '20.19.0';
 const decoder = new TextDecoder('utf-8', { fatal: true });
+
+function assertSupportedNodeVersion(version) {
+  const match = /^(\d+)\.(\d+)\.(\d+)([-+].*)?$/.exec(version);
+  if (!match) {
+    throw new Error(`Unable to validate Node runtime version: ${version}`);
+  }
+  if (match[4] && match[4].startsWith('-')) {
+    throw new Error(`A stable Node release is required; found ${version}.`);
+  }
+
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  if (major < 20 || (major === 20 && minor < 19)) {
+    throw new Error(`Node 20.19 or newer is required; found ${version}.`);
+  }
+}
 
 async function resolveRoot(root) {
   const absoluteRoot = path.resolve(root);
@@ -239,6 +256,7 @@ async function loadPinnedLess(root) {
 }
 
 async function main() {
+  assertSupportedNodeVersion(process.versions.node);
   const [mode, ...extraArguments] = process.argv.slice(2);
   if (!['build', 'check', 'lint'].includes(mode) || extraArguments.length !== 0) {
     throw new Error('Usage: node scripts/build-css.js <build|check|lint>');
@@ -266,6 +284,8 @@ if (require.main === module) {
 module.exports = {
   MAX_INPUT_BYTES,
   MAX_OUTPUT_BYTES,
+  MINIMUM_NODE_VERSION,
+  assertSupportedNodeVersion,
   buildCss,
   checkGeneratedCss,
   compileCss,

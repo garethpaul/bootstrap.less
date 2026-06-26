@@ -142,6 +142,13 @@ for package_contract in \
     "package.json must preserve build contract: $package_contract"
 done
 
+require_contains "scripts/build-css.js" "const MINIMUM_NODE_VERSION = '20.19.0';" \
+  "Compiler wrapper must keep the executable Node runtime floor."
+require_contains "scripts/build-css.js" "assertSupportedNodeVersion(process.versions.node);" \
+  "Compiler CLI must reject unsupported Node runtimes before loading LESS."
+require_contains "tests/build-css.test.js" "compiler CLI enforces the documented Node runtime floor" \
+  "Compiler tests must cover the Node runtime floor."
+
 if grep -Eq '"(build|check:generated|lint:less)": "lessc([[:space:]]|$)' \
     "$ROOT_DIR/package.json"; then
   printf '%s\n' "Package scripts must not resolve LESS from the ambient PATH." >&2

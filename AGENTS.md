@@ -29,6 +29,8 @@
   without deprecation warnings.
 - Package scripts must resolve LESS through `node_modules`; never fall back to
   an ambient or global `lessc` executable.
+- Compiler CLI commands fail closed below Node 20.19 instead of treating npm's
+  engine warning as successful verification.
 - Route compilation through `scripts/build-css.js` so inputs and outputs remain
   bounded, non-symlinked, and atomically generated.
 - Keep generated `style.css` byte-for-byte synchronized with the LESS sources.

@@ -42,6 +42,9 @@ cd bootstrap.less
 npm ci --ignore-scripts --omit=optional
 ```
 
+Compiler CLI commands require Node 20.19 or newer and fail before loading LESS
+on older runtimes; an npm engine warning alone is not accepted as validation.
+
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
 
 ## Running or Using the Project

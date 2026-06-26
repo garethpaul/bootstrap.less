@@ -34,6 +34,7 @@ Priority:
 - Keep the long reference page navigable by keyboard and document landmarks
 - Keep static link attributes valid without relying on browser repair
 - Keep root lint, test, and build gates tied to the static source baseline
+- Fail compiler commands closed below the documented Node 20.19 runtime floor
 - Keep GitHub Actions running the static `make check` baseline before review
 - Keep CodeQL default-setup coverage for Actions and avoid reintroducing a browser JavaScript surface
 - Make historical dependencies explicit
