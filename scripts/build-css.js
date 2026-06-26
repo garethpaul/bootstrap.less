@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('node:fs/promises');
+const { constants } = require('node:fs');
 const path = require('node:path');
 const { createRequire } = require('node:module');
 const { TextDecoder } = require('node:util');
@@ -40,19 +41,34 @@ async function resolveRoot(root) {
 
 async function readBoundedRegularFile(root, filename, maximumBytes) {
   const filePath = path.join(root, filename);
-  const metadata = await fs.lstat(filePath);
+  let fileHandle;
 
-  if (metadata.isSymbolicLink()) {
-    throw new Error(`${filename} must not be a symbolic link.`);
-  }
-  if (!metadata.isFile()) {
-    throw new Error(`${filename} must be a regular file.`);
-  }
-  if (metadata.size > maximumBytes) {
-    throw new Error(`${filename} exceeds its size limit of ${maximumBytes} bytes.`);
+  try {
+    fileHandle = await fs.open(filePath, constants.O_RDONLY | constants.O_NOFOLLOW);
+  } catch (error) {
+    if (error.code === 'ELOOP') {
+      throw new Error(`${filename} must not be a symbolic link.`);
+    }
+    throw error;
   }
 
-  return fs.readFile(filePath);
+  try {
+    const metadata = await fileHandle.stat();
+    if (!metadata.isFile()) {
+      throw new Error(`${filename} must be a regular file.`);
+    }
+    if (metadata.size > maximumBytes) {
+      throw new Error(`${filename} exceeds its size limit of ${maximumBytes} bytes.`);
+    }
+
+    const contents = await fileHandle.readFile();
+    if (contents.byteLength > maximumBytes) {
+      throw new Error(`${filename} exceeds its size limit of ${maximumBytes} bytes.`);
+    }
+    return contents;
+  } finally {
+    await fileHandle.close();
+  }
 }
 
 function decodeUtf8(contents, filename) {

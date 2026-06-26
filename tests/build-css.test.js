@@ -71,6 +71,19 @@ test('compiler refuses a symlinked LESS input', async (context) => {
   await assert.rejects(compileCss(root, less), /style\.less.*symbolic link/i);
 });
 
+test('compiler binds LESS input validation and reads to one descriptor', async () => {
+  const compilerSource = await fs.readFile(
+    path.join(repositoryRoot, 'scripts', 'build-css.js'),
+    'utf8',
+  );
+
+  assert.match(compilerSource, /constants\.O_RDONLY \| constants\.O_NOFOLLOW/);
+  assert.match(compilerSource, /await fileHandle\.stat\(\)/);
+  assert.match(compilerSource, /const contents = await fileHandle\.readFile\(\)/);
+  assert.match(compilerSource, /contents\.byteLength > maximumBytes/);
+  assert.match(compilerSource, /return contents/);
+});
+
 test('compiler rejects oversized LESS inputs before compilation', async (context) => {
   const root = await createFixture();
   context.after(() => fs.rm(root, { recursive: true, force: true }));

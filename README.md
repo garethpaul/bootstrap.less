@@ -78,10 +78,11 @@ The repository pins LESS 4.6.6 and its transitive graph in `package-lock.json`;
 the generated style.css file remains committed for direct static deployment.
 Package scripts invoke that repository-local compiler through
 `scripts/build-css.js` and fail when the frozen install is absent instead of
-falling back to an ambient `lessc`. The wrapper rejects symlinked or non-regular
-inputs and outputs, restricts imports to the two checked-in LESS files, bounds
-source and generated sizes, disables executable plugins and local file-reading
-functions, and replaces `style.css` atomically.
+falling back to an ambient `lessc`. The wrapper opens each input through one
+no-follow file descriptor for validation and reading, rejects symlinked or
+non-regular inputs and outputs, restricts imports to the two checked-in LESS
+files, bounds source and generated sizes, disables executable plugins and local
+file-reading functions, and replaces `style.css` atomically.
 The Make wrapper derives its root from the loaded repository Makefile and
 cannot be redirected with a caller-supplied ROOT value.
 The install omits compiler features declared optional by LESS because this

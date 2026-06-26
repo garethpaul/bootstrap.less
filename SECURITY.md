@@ -45,10 +45,11 @@ Helpful reports include:
 - Compiler CLI commands enforce Node 20.19 or newer before loading the locked
   LESS package, so unsupported runtimes cannot produce a misleading green gate
   after only an npm engine warning.
-- The compiler wrapper rejects symlinked, non-regular, oversized, and
-  unapproved LESS inputs, executable plugins, and local file-reading functions;
-  it bounds generated CSS and atomically replaces only the repository
-  `style.css` file.
+- The compiler wrapper validates and reads each LESS input through the same
+  no-follow file descriptor, rejects symlinked, non-regular, oversized, and
+  unapproved inputs, executable plugins, and local file-reading functions; it
+  bounds generated CSS and atomically replaces only the repository `style.css`
+  file.
 - The Make root is protected from command-line overrides so verification cannot
   be redirected to an unreviewed checker or compiler working directory.
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.

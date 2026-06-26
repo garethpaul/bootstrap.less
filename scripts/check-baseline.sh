@@ -16,6 +16,7 @@ LESS_ONE_TIME_PLAN="docs/plans/2026-06-13-static-less-one-time-compilation.md"
 LESS_RUNTIME_INTEGRITY_PLAN="docs/plans/2026-06-13-static-less-runtime-integrity.md"
 STATIC_CSS_BUILD_PLAN="docs/plans/2026-06-14-static-css-build-migration.md"
 MAKE_ROOT_PROTECTION_PLAN="docs/plans/2026-06-15-make-root-override-protection.md"
+LESS_INPUT_DESCRIPTOR_PLAN="docs/plans/2026-06-26-less-input-descriptor-boundary.md"
 EXPECTED_WORKFLOW=$(mktemp "${TMPDIR:-/tmp}/bootstrap-less-workflow.XXXXXX")
 trap 'rm -f "$EXPECTED_WORKFLOW"' EXIT HUP INT TERM
 
@@ -57,6 +58,7 @@ for path in \
   "$LESS_RUNTIME_INTEGRITY_PLAN" \
   "$STATIC_CSS_BUILD_PLAN" \
   "$MAKE_ROOT_PROTECTION_PLAN" \
+  "$LESS_INPUT_DESCRIPTOR_PLAN" \
   ".github/workflows/check.yml" \
   ".gitignore" \
   "SECURITY.md" \
@@ -148,6 +150,17 @@ require_contains "scripts/build-css.js" "assertSupportedNodeVersion(process.vers
   "Compiler CLI must reject unsupported Node runtimes before loading LESS."
 require_contains "tests/build-css.test.js" "compiler CLI enforces the documented Node runtime floor" \
   "Compiler tests must cover the Node runtime floor."
+require_contains "scripts/build-css.js" "constants.O_RDONLY | constants.O_NOFOLLOW" \
+  "Compiler inputs must open without following symlinks."
+require_contains "scripts/build-css.js" "await fileHandle.stat()" \
+  "Compiler input metadata must come from the opened descriptor."
+require_contains "scripts/build-css.js" "const contents = await fileHandle.readFile()" \
+  "Compiler inputs must be read from the validated descriptor."
+require_contains "scripts/build-css.js" "contents.byteLength > maximumBytes" \
+  "Compiler inputs must enforce the actual descriptor-read byte count."
+require_contains "tests/build-css.test.js" \
+  "compiler binds LESS input validation and reads to one descriptor" \
+  "Build tests must preserve descriptor-bound input ownership."
 
 if grep -Eq '"(build|check:generated|lint:less)": "lessc([[:space:]]|$)' \
     "$ROOT_DIR/package.json"; then
@@ -280,6 +293,22 @@ require_contains "VISION.md" 'repository-local locked LESS compiler' \
   "Vision guidance must preserve repository-local compiler resolution."
 require_contains "CHANGES.md" 'instead of using an ambient executable' \
   "Change history must record the local compiler correction."
+require_contains "README.md" "no-follow file descriptor" \
+  "README must document descriptor-bound compiler inputs."
+require_contains "SECURITY.md" "no-follow file descriptor" \
+  "Security guidance must document descriptor-bound compiler inputs."
+require_contains "VISION.md" "Keep compiler inputs descriptor-bound" \
+  "Vision guidance must preserve descriptor-bound compiler inputs."
+require_contains "AGENTS.md" "one no-follow descriptor" \
+  "Agent guidance must preserve descriptor-bound compiler inputs."
+require_contains "CHANGES.md" "LESS compiler input ownership" \
+  "Change history must record descriptor-bound compiler inputs."
+require_contains "$LESS_INPUT_DESCRIPTOR_PLAN" "## Status: Completed" \
+  "LESS input descriptor plan must record completed status."
+require_contains "$LESS_INPUT_DESCRIPTOR_PLAN" "make check" \
+  "LESS input descriptor plan must record make check verification."
+require_contains "$LESS_INPUT_DESCRIPTOR_PLAN" "fs.readFile(filePath)" \
+  "LESS input descriptor plan must preserve pre-fix evidence."
 require_contains "README.md" "cannot be redirected with a caller-supplied ROOT value" \
   "README must document Make root override protection."
 require_contains "SECURITY.md" "Make root is protected from command-line overrides" \

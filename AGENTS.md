@@ -31,7 +31,8 @@
   an ambient or global `lessc` executable.
 - Compiler CLI commands fail closed below Node 20.19 instead of treating npm's
   engine warning as successful verification.
-- Route compilation through `scripts/build-css.js` so inputs and outputs remain
+- Route compilation through `scripts/build-css.js` so each input stays bound to
+  one no-follow descriptor through validation and reading, while outputs remain
   bounded, non-symlinked, and atomically generated.
 - Keep generated `style.css` byte-for-byte synchronized with the LESS sources.
 

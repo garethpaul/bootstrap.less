@@ -54,7 +54,8 @@ Contribution rules:
 - Keep `.github/workflows/check.yml` aligned with the frozen dependency install
   and generated-output gate.
 - Keep build commands bound to the repository-local locked LESS compiler.
-- Keep compiler inputs, imports, and generated output bounded and symlink-safe.
+- Keep compiler inputs descriptor-bound, bounded, and symlink-safe from open
+  through validation and reading.
 - Keep generated CSS replacement atomic.
 - Keep Make verification rooted to the loaded repository Makefile.
 - Do not replace the project with modern Bootstrap assets.
